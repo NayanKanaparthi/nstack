@@ -79,7 +79,7 @@ Per Claude Code's docs, committing the project setting turns the plugin on for c
 
 ## Claude.ai
 
-Zip one skill folder from `skills/` and upload it under Settings, Capabilities, Skills. The plugins don't install this way. Not checked against the current Claude.ai settings page.
+Zip one skill folder from `skills/`, the folder itself, so the zip opens to `<skill-name>/SKILL.md`. Then go to Customize, Skills, press +, pick Create skill, then Upload a skill. Code execution and file creation has to be on. The plugins don't install this way. The menu path is from Claude's help center as of November 2026; an actual upload hasn't been tried yet.
 
 ## Other agents
 

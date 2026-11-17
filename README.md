@@ -17,7 +17,7 @@ In a Claude Code session:
 
 That gives you every standalone skill below. Then just work. Tell Claude about a product idea and the assumptions behind it and evidence-check kicks in, or ask it to help price an AI feature and ai-pricing-strategy does. You can also call a skill by name, for example `/nstack:evidence-check`.
 
-The plugins install the same way: `/plugin install discover@nstack` and `smoke-test@nstack`.
+The plugins install the same way: `/plugin install discover@nstack` and `smoke-test@nstack`. To get only agent-memory-design, it has its own entry: `/plugin install agent-memory-design@nstack`.
 
 ## Install
 
@@ -44,7 +44,7 @@ cd ~/nstack
 
 `./setup` links every folder in `skills/` into `~/.claude/skills/`. It never overwrites a folder it didn't put there. `git pull` in `~/nstack` updates everything, and `./setup --uninstall` removes only what it added. The plugins in `plugins/` aren't installed this way; use the plugin route for those.
 
-**On Claude.ai.** Zip a skill folder from `skills/` and upload it under Settings, Capabilities, Skills.
+**On Claude.ai.** Zip one skill folder from `skills/`, the folder itself, so the zip opens to `<skill-name>/SKILL.md`. Then go to Customize, Skills, press +, pick Create skill, then Upload a skill. Code execution and file creation has to be on.
 
 ### Step 2: team mode
 

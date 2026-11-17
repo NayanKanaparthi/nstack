@@ -12,6 +12,15 @@
       "description": "Every standalone skill in nstack, in one install."
     },
     {
+      "name": "agent-memory-design",
+      "source": "./skills/agent-memory-design",
+      "strict": false,
+      "skills": [
+        "./"
+      ],
+      "description": "Works out and builds the memory system for an AI agent you're planning or building with Claude."
+    },
+    {
       "name": "discover",
       "source": "./plugins/discover",
       "description": "From a vague idea, or only an area of interest, to a checked evidence report and a plan to interview real people."

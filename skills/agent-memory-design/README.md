@@ -28,9 +28,16 @@ Anyone building an agent, assistant, bot or multi-step workflow on a large langu
 
 ## Install
 
-**Claude Code.** Copy the `agent-memory-design` folder into `~/.claude/skills/` (all projects) or `.claude/skills/` inside a project.
+**Claude Code.** Add the nstack marketplace and install just this skill:
 
-**Claude.ai.** Zip the `agent-memory-design` folder and upload it in Settings, under Capabilities, then Skills.
+```
+/plugin marketplace add NayanKanaparthi/nstack
+/plugin install agent-memory-design@nstack
+```
+
+From your shell, the same two commands start with `claude plugin` in place of `/plugin`. The terminal and the desktop app's Code tab read the same plugin settings, so installing it in one makes it available in the other. You can also copy the `agent-memory-design` folder into `~/.claude/skills/` (all projects) or `.claude/skills/` inside a project.
+
+**Claude.ai.** Zip the `agent-memory-design` folder itself, so the zip opens to `agent-memory-design/SKILL.md`. Then go to Customize, Skills, press +, pick Create skill, then Upload a skill. Code execution and file creation has to be on.
 
 ## How a run goes
 
