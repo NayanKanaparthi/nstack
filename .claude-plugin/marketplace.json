@@ -1,0 +1,25 @@
+{
+  "name": "nstack",
+  "description": "Nayan's Claude setup: the skills and plugins I use to plan, build, check and ship my work.",
+  "owner": {
+    "name": "Nayan Kanaparthi",
+    "url": "https://nayankanaparthi.dev"
+  },
+  "plugins": [
+    {
+      "name": "nstack",
+      "source": ".",
+      "description": "Every standalone skill in nstack, in one install."
+    },
+    {
+      "name": "discover",
+      "source": "./plugins/discover",
+      "description": "From a vague idea, or only an area of interest, to a checked evidence report and a plan to interview real people."
+    },
+    {
+      "name": "smoke-test",
+      "source": "./plugins/smoke-test",
+      "description": "Turns interview findings into one smoke test and a launch pack, then reads the results against lines set in advance."
+    }
+  ]
+}

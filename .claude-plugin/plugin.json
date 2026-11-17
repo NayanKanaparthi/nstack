@@ -1,0 +1,14 @@
+{
+  "name": "nstack",
+  "displayName": "nstack skills",
+  "version": "0.1.0",
+  "description": "Every standalone skill in nstack, in one install.",
+  "author": {
+    "name": "Nayan Kanaparthi",
+    "url": "https://nayankanaparthi.dev"
+  },
+  "homepage": "https://github.com/NayanKanaparthi/nstack",
+  "repository": "https://github.com/NayanKanaparthi/nstack",
+  "license": "MIT",
+  "keywords": ["skills", "research", "pricing", "startups", "agents"]
+}

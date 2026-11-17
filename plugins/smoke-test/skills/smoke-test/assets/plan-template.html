@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<style>
+  :root { --ink:#1d1d1f; --muted:#5f6368; --line:#e3e3e8; --accent:#57068c; --bg:#ffffff; --soft:#f6f3fa; --warn:#8a4b00; }
+  @media (prefers-color-scheme: dark) { :root { --ink:#ececf1; --muted:#a8a8b3; --line:#34343c; --accent:#c9a2ee; --bg:#141418; --soft:#1e1b24; --warn:#f0b35a; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  main { max-width:860px; margin:0 auto; padding:32px 16px 48px; }
+  h1 { font-size:26px; line-height:1.25; margin:0 0 4px; }
+  h2 { font-size:18px; margin:28px 0 8px; color:var(--accent); }
+  .meta { color:var(--muted); font-size:14px; margin:0 0 20px; }
+  .proviso { background:var(--soft); border-left:4px solid var(--accent); padding:12px 14px; margin:0 0 12px; }
+  .warn { color:var(--warn); font-weight:600; margin:0 0 16px; }
+  table { width:100%; border-collapse:collapse; }
+  th, td { text-align:left; vertical-align:top; padding:10px 8px; border-bottom:1px solid var(--line); }
+  th { width:30%; color:var(--muted); font-weight:600; font-size:14px; }
+  ul { padding-left:20px; }
+  li { margin:4px 0; }
+  footer { margin-top:36px; color:var(--muted); font-size:13px; border-top:1px solid var(--line); padding-top:12px; }
+  @media (max-width:560px) { th { width:38%; } }
+  @media print { body { font-size:12px; } main { padding:0; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>{{TITLE}}</h1>
+  <p class="meta">{{META}}</p>
+  <p class="proviso">{{PROVISO}}</p>
+  {{WARN}}
+  <h2>The test, locked before launch</h2>
+  <table>{{ROWS}}</table>
+  <h2>Honesty checklist</h2>
+  <ul>{{RULES}}</ul>
+  <footer>Leverage by BCE · Designed and built by Nayan Kanaparthi · Berkley Center for Entrepreneurship, NYU Stern · Smoke Test {{VERSION}}</footer>
+</main>
+</body>
+</html>

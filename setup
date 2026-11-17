@@ -1,0 +1,140 @@
+#!/usr/bin/env bash
+# nstack setup: installs the skills in skills/ for Claude Code.
+#
+#   ./setup                     link every skill into ~/.claude/skills/
+#   ./setup --project <path>    link them into <path>/.claude/skills/ instead
+#   ./setup --copy              copy the folders instead of linking them
+#   ./setup --uninstall         remove only what this script installed
+#
+# Flags combine: ./setup --project ~/code/app --copy
+# It never overwrites a folder it did not install. It says so and skips it.
+
+set -euo pipefail
+
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILLS_SRC="$REPO_DIR/skills"
+MARKER=".nstack-installed"
+
+target="${HOME}/.claude/skills"
+mode="link"
+action="install"
+
+usage() {
+  sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --project)
+      if [ $# -lt 2 ]; then echo "--project needs a path" >&2; exit 2; fi
+      target="$2/.claude/skills"
+      shift 2
+      ;;
+    --copy) mode="copy"; shift ;;
+    --uninstall) action="uninstall"; shift ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "Unknown option: $1" >&2; usage >&2; exit 2 ;;
+  esac
+done
+
+installed=0
+updated=0
+skipped=0
+removed=0
+
+install_one() {
+  local src="$1" name dest
+  name="$(basename "$src")"
+  dest="$target/$name"
+
+  if [ -L "$dest" ]; then
+    if [ "$(readlink "$dest")" = "$src" ]; then
+      echo "  ok       $name (already linked)"
+    else
+      echo "  skip     $name: $dest is a link to somewhere else"
+      skipped=$((skipped + 1))
+    fi
+    return
+  fi
+
+  if [ -e "$dest" ]; then
+    if [ -f "$dest/$MARKER" ] && [ "$mode" = "copy" ]; then
+      rm -rf "$dest"
+      cp -R "$src" "$dest"
+      echo "installed by nstack ./setup" > "$dest/$MARKER"
+      echo "  updated  $name (copy)"
+      updated=$((updated + 1))
+    elif [ -f "$dest/$MARKER" ]; then
+      echo "  skip     $name: an nstack copy is already there. Use --copy to update it, or --uninstall first to switch to a link"
+      skipped=$((skipped + 1))
+    else
+      echo "  skip     $name: $dest already exists and was not installed by nstack"
+      skipped=$((skipped + 1))
+    fi
+    return
+  fi
+
+  if [ "$mode" = "link" ]; then
+    ln -s "$src" "$dest"
+    echo "  linked   $name -> $src"
+  else
+    cp -R "$src" "$dest"
+    echo "installed by nstack ./setup" > "$dest/$MARKER"
+    echo "  copied   $name"
+  fi
+  installed=$((installed + 1))
+}
+
+uninstall_one() {
+  local src="$1" name dest
+  name="$(basename "$src")"
+  dest="$target/$name"
+
+  if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$src" ]; then
+    rm "$dest"
+    echo "  removed  $name (link)"
+    removed=$((removed + 1))
+  elif [ -d "$dest" ] && [ ! -L "$dest" ] && [ -f "$dest/$MARKER" ]; then
+    rm -rf "$dest"
+    echo "  removed  $name (copy)"
+    removed=$((removed + 1))
+  elif [ -e "$dest" ] || [ -L "$dest" ]; then
+    echo "  leave    $name: not installed by nstack"
+  fi
+}
+
+if [ ! -d "$SKILLS_SRC" ]; then
+  echo "No skills/ folder next to this script ($REPO_DIR)." >&2
+  exit 1
+fi
+
+if [ "$action" = "install" ]; then
+  echo "nstack install: $target (mode: $mode)"
+else
+  echo "nstack uninstall: $target"
+fi
+if [ "$action" = "install" ]; then
+  mkdir -p "$target"
+fi
+
+for dir in "$SKILLS_SRC"/*/; do
+  [ -d "$dir" ] || continue
+  src="${dir%/}"
+  [ -f "$src/SKILL.md" ] || continue
+  if [ "$action" = "install" ]; then
+    install_one "$src"
+  else
+    [ -d "$target" ] || break
+    uninstall_one "$src"
+  fi
+done
+
+if [ "$action" = "install" ]; then
+  echo "Done: $installed installed, $updated updated, $skipped skipped."
+  if [ "$mode" = "link" ]; then
+    echo "The links point at this folder, so keep it where it is. Run 'git pull' here to update."
+  fi
+  echo "Start a new Claude Code session to load them."
+else
+  echo "Done: $removed removed."
+fi

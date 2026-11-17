@@ -1,0 +1,65 @@
+name: check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Marketplace and plugin files are valid JSON
+        run: |
+          for f in .claude-plugin/*.json plugins/*/.claude-plugin/plugin.json; do
+            python3 -m json.tool "$f" > /dev/null
+            echo "ok $f"
+          done
+
+      - name: Every skill has a name matching its folder and a description
+        run: |
+          python3 - <<'PY'
+          import glob, os, sys
+          bad = 0
+          files = glob.glob("skills/*/SKILL.md") + glob.glob("plugins/*/skills/*/SKILL.md")
+          for path in sorted(files):
+              lines = open(path, encoding="utf-8").read().splitlines()
+              if not lines or lines[0].strip() != "---":
+                  print(f"FAIL {path}: no frontmatter"); bad += 1; continue
+              meta = {}
+              for line in lines[1:]:
+                  if line.strip() == "---":
+                      break
+                  if ":" in line and not line.startswith(" "):
+                      k, v = line.split(":", 1)
+                      meta[k.strip()] = v.strip()
+              folder = os.path.basename(os.path.dirname(path))
+              if meta.get("name") != folder:
+                  print(f"FAIL {path}: name is {meta.get('name')!r}, folder is {folder!r}"); bad += 1
+              elif not meta.get("description"):
+                  print(f"FAIL {path}: no description"); bad += 1
+              else:
+                  print(f"ok {path}")
+          sys.exit(1 if bad else 0)
+          PY
+
+      - name: agent-memory-design checker passes its example and fails its blank template
+        run: |
+          python3 -B skills/agent-memory-design/scripts/check_design.py skills/agent-memory-design/assets/example-memory-design.md
+          if python3 -B skills/agent-memory-design/scripts/check_design.py skills/agent-memory-design/assets/memory-design-template.md > /dev/null; then
+            echo "the blank template should fail"; exit 1
+          fi
+
+      - name: setup passes shellcheck
+        run: |
+          command -v shellcheck || (sudo apt-get update && sudo apt-get install -y shellcheck)
+          shellcheck setup
+
+      - name: setup installs and uninstalls cleanly
+        run: |
+          export HOME="$(mktemp -d)"
+          ./setup
+          test -n "$(ls -A "$HOME/.claude/skills")"
+          ./setup --uninstall
+          test -z "$(ls -A "$HOME/.claude/skills")"

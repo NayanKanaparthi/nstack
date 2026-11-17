@@ -1,0 +1,26 @@
+# Skills by other people that I use. Kept locally, never pushed. See third-party/THIRD_PARTY.md
+third-party/
+
+# Skills whose authorship isn't settled yet. Move each one to skills/ or third-party/ before pushing.
+_review/
+
+.DS_Store
+__pycache__/
+*.pyc
+.nstack-import.tar.gz
+
+# Personal handoff notes for chats, not for the public repo
+wip/**/CONTEXT.md
+
+# OS and editor files
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
+
+# Local working files for agent-memory-design (the skill is in skills/, its public record in notes/)
+wip/agent-memory-design/
+
+# Not released yet (Berkley Center work in progress)
+plugins/build/

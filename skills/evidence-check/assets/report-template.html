@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evidence check</title>
+<style>
+:root {
+  --paper: #faf9f7; --card: #ffffff; --ink: #1c1b1f; --soft: #5b5966; --line: #e4e1ea;
+  --accent: #57068c; --accent-soft: #f1e8f7;
+  --for: #1d5fa8; --for-soft: #e6eff9; --against: #b3541e; --against-soft: #fbeee4;
+  --note: #f4f2ee;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #151418; --card: #1e1d23; --ink: #eceaf1; --soft: #a7a4b3; --line: #33313b;
+    --accent: #c9a2e8; --accent-soft: #2c2236;
+    --for: #8db8ea; --for-soft: #1c2a3b; --against: #eaa77c; --against-soft: #3a261a;
+    --note: #25232b;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink);
+  font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+main { max-width: 820px; margin: 0 auto; padding: 28px 16px 56px; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+h1 { font-size: 26px; line-height: 1.25; margin: 6px 0 10px; }
+h2 { font-size: 19px; margin: 36px 0 12px; }
+.meta { color: var(--soft); font-size: 14px; margin: 0 0 14px; }
+.notice { background: var(--note); border-left: 4px solid var(--accent); padding: 12px 14px; border-radius: 6px; font-size: 15px; }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0 6px; }
+button { font: inherit; font-size: 14px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--card); color: var(--ink); cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+details.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; margin: 14px 0; overflow: hidden; }
+details.card > summary { list-style: none; cursor: pointer; padding: 16px 18px; }
+details.card > summary::-webkit-details-marker { display: none; }
+.card-top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+.statement { font-size: 18px; font-weight: 650; margin: 4px 0 10px; }
+.pill { display: inline-block; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.basis { color: var(--soft); font-size: 14px; margin: 8px 0 0; }
+.bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--line); }
+.bar span { display: block; height: 100%; }
+.bar .f { background: var(--for); } .bar .a { background: var(--against); }
+.tally { display: flex; justify-content: space-between; font-size: 13px; margin-top: 5px; }
+.tally .f { color: var(--for); font-weight: 650; } .tally .a { color: var(--against); font-weight: 650; }
+.hint { color: var(--soft); font-size: 13px; margin-top: 8px; }
+details.card[open] .hint { display: none; }
+.body { padding: 2px 18px 18px; border-top: 1px solid var(--line); }
+.explain { font-size: 15px; margin: 14px 0; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 640px) { .cols { grid-template-columns: 1fr; } }
+.col h3 { font-size: 14px; margin: 0 0 8px; }
+.col.f h3 { color: var(--for); } .col.a h3 { color: var(--against); }
+.item { border-radius: 10px; padding: 12px 12px 10px; margin-bottom: 10px; font-size: 15px; }
+.col.f .item { background: var(--for-soft); } .col.a .item { background: var(--against-soft); }
+.item.plain { background: var(--note); }
+.quote { margin: 0 0 8px; }
+.who { color: var(--soft); font-size: 13px; margin: 0 0 4px; }
+.did { font-size: 13px; margin: 0 0 6px; }
+.tag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase;
+  border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; margin-right: 6px; color: var(--soft); background: var(--card); }
+a { color: var(--accent); }
+.open { font-size: 13px; }
+.empty { color: var(--soft); font-size: 14px; font-style: italic; margin: 0 0 10px; }
+.sub { margin-top: 16px; }
+.sub h3 { font-size: 14px; margin: 0 0 8px; }
+ul.clean { margin: 0; padding-left: 20px; } ul.clean li { margin-bottom: 6px; }
+details.more { margin-top: 16px; border-top: 1px dashed var(--line); padding-top: 12px; }
+details.more > summary { cursor: pointer; font-size: 14px; font-weight: 650; color: var(--soft); }
+.reason { font-size: 13px; font-weight: 650; margin: 0 0 6px; }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+.q { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.q:last-child { border-bottom: 0; }
+.q input { margin-top: 5px; width: 17px; height: 17px; accent-color: var(--accent); }
+.q .tests { color: var(--soft); font-size: 13px; }
+.q.done label { color: var(--soft); text-decoration: line-through; }
+footer { color: var(--soft); font-size: 13px; margin-top: 40px; }
+@media print {
+  body { background: #fff; color: #000; } .toolbar, .hint, .noprint { display: none !important; }
+  details.card, .panel { break-inside: avoid; border-color: #bbb; }
+  a { color: #000; }
+}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script id="report-data" type="application/json">__REPORT_DATA__</script>
+<script>
+(function () {
+  "use strict";
+  var data;
+  try { data = JSON.parse(document.getElementById("report-data").textContent); }
+  catch (e) { document.getElementById("app").textContent = "This report has no data in it."; return; }
+
+  var LABEL = {
+    supported: ["The web backs this up", "Two or more people or sources, on at least two different pages, back this up, and nobody counted says the opposite."],
+    contradicted: ["The web points the other way", "Two or more people or sources, on at least two different pages, say the opposite, and nobody counted backs it up."],
+    mixed: ["People are split", "People or sources were counted on both sides."],
+    thin: ["Too little to tell", ""],
+    nothing: ["Nothing solid found", "Nothing passed the check. That does not mean it is false. It may mean people don't write about this online."]
+  };
+  var THIN = {
+    one_voice: "Only one person or source was counted, with nobody on the other side.",
+    one_page: "Everyone counted is on the same page, so this may be one small corner of the web.",
+    opinions_only: "People gave opinions, but nobody described doing anything about it.",
+    needs_number: "This is a claim about how many or how often, and no count turned up. People's stories show that it happens, not how often."
+  };
+  var REASON = {
+    second_hand: "Someone describing other people, not their own experience.",
+    stake: "The page shows the writer gains if you believe them.",
+    not_original: "A number repeated from somewhere else, or with no word on who counted it.",
+    vague_amount: "A rough amount with no count behind it.",
+    indirect: "It doesn't say this directly. It only connects through a guess.",
+    group_not_shown: "The page doesn't show the writer is one of the people you asked about.",
+    old: "More than five years old.",
+    could_not_open: "The page wouldn't open, so the quote couldn't be checked.",
+    pasted: "Pasted in by you, and not checked.",
+    not_on_page: "The quote wasn't on the page.",
+    off_target: "It is about something else."
+  };
+
+  function el(tag, attrs, kids) {
+    var node = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) {
+      if (k === "text") node.textContent = attrs[k];
+      else if (k === "class") node.className = attrs[k];
+      else node.setAttribute(k, attrs[k]);
+    });
+    (kids || []).forEach(function (kid) { if (kid) node.appendChild(kid); });
+    return node;
+  }
+  function link(url, label) {
+    if (!/^https?:\/\//i.test(url || "")) return el("span", { text: label });
+    return el("a", { href: url, target: "_blank", rel: "noopener noreferrer", text: label });
+  }
+  function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
+  function list(lines) {
+    return el("ul", { class: "clean" }, lines.map(function (t) { return el("li", { text: t }); }));
+  }
+
+  function itemCard(item, plain) {
+    var kids = [el("p", { class: "quote", text: "“" + item.quote + "”" })];
+    var who = [item.who, item.when, item.where].filter(Boolean).join(" · ");
+    kids.push(el("p", { class: "who", text: who }));
+    if (item.kind === "own words") {
+      kids.push(el("p", { class: "did", text: item.did ? "What they did: " + item.did : "Opinion only. They don't describe doing anything about it." }));
+    } else if (item.did) {
+      kids.push(el("p", { class: "did", text: item.did }));
+    }
+    if (item.note) kids.push(el("p", { class: "did", text: "Note: " + item.note }));
+    var foot = el("p", { class: "open" }, [
+      item.found_in_check ? el("span", { class: "tag", text: "Found during the check" }) : null,
+      link(item.link, "Open the page")
+    ]);
+    kids.push(foot);
+    return el("div", { class: "item" + (plain ? " plain" : "") }, kids);
+  }
+
+  function sideColumn(a, side, title) {
+    var all = (a.items || []).filter(function (i) { return i.side === side; });
+    var counted = all.filter(function (i) { return i.result === "counts"; });
+    var aside = all.length - counted.length;
+    var unread = (a.unread && a.unread[side]) || 0;
+    var kids = [el("h3", { text: title + " (" + counted.length + ")" })];
+    if (!counted.length) {
+      var msg = "Nothing found.";
+      if (aside) msg = "Found " + aside + ", none passed the check. See “Not counted, and why” below.";
+      else if (unread) msg = "Nothing in the pages that were read. " + plural(unread, "more page was", "more pages were") + " found and not read.";
+      kids.push(el("p", { class: "empty", text: msg }));
+    }
+    counted.forEach(function (i) { kids.push(itemCard(i)); });
+    return el("div", { class: "col " + (side === "for" ? "f" : "a") }, kids);
+  }
+
+  function assumptionCard(a, index) {
+    var g = a._grade || { status: "nothing", why: "", "for": 0, against: 0, voices: 0, pages: 0 };
+    var label = LABEL[g.status] || LABEL.nothing;
+    var explain = g.status === "thin" ? (THIN[g.why] || "Too little was counted to say either way.") : label[1];
+    var total = g["for"] + g.against;
+    var bar = el("div", { class: "bar", role: "img", "aria-label": g["for"] + " counted for, " + g.against + " counted against" }, total ? [
+      el("span", { class: "f", style: "width:" + (100 * g["for"] / total) + "%" }),
+      el("span", { class: "a", style: "width:" + (100 * g.against / total) + "%" })
+    ] : []);
+    var basis = g.voices
+      ? "Based on " + plural(g.voices, "person or source", "people or sources") + (g.voices > 1 && g.pages === 1 ? ", all on 1 page." : " on " + plural(g.pages, "page", "pages") + ".")
+      : "Nothing was counted on either side.";
+    var summary = el("summary", {}, [
+      el("div", { class: "card-top" }, [
+        el("span", { class: "eyebrow", text: "Assumption " + (index + 1) }),
+        el("span", { class: "pill", text: label[0] })
+      ]),
+      el("p", { class: "statement", text: a.statement }),
+      bar,
+      el("div", { class: "tally" }, [
+        el("span", { class: "f", text: g["for"] + " back it up" }),
+        el("span", { class: "a", text: g.against + " point the other way" })
+      ]),
+      el("p", { class: "basis", text: basis }),
+      el("p", { class: "hint noprint", text: "Click to see the quotes" })
+    ]);
+
+    var body = [el("p", { class: "explain", text: explain })];
+    body.push(el("div", { class: "cols" }, [
+      sideColumn(a, "for", "Backs it up"),
+      sideColumn(a, "against", "Points the other way")
+    ]));
+
+    var context = (a.items || []).filter(function (i) { return i.side === "context" && i.result === "counts"; });
+    if (context.length) {
+      body.push(el("div", { class: "sub" }, [el("h3", { text: "Also worth knowing (counted for neither side)" })]
+        .concat(context.map(function (i) { return itemCard(i, true); }))));
+    }
+    if (a.still_open) body.push(el("div", { class: "sub" }, [el("h3", { text: "Still open" }), el("p", { text: a.still_open, style: "margin:0" })]));
+    if ((a.not_found || []).length) body.push(el("div", { class: "sub" }, [el("h3", { text: "What this search didn't find" }), list(a.not_found)]));
+
+    var aside = (a.items || []).filter(function (i) { return i.result !== "counts"; });
+    if (aside.length) {
+      var rows = aside.map(function (i) {
+        var card = itemCard(i, true);
+        var side = i.side === "for" ? "Would have backed it up" : i.side === "against" ? "Would have pointed the other way" : "Background";
+        card.insertBefore(el("p", { class: "reason", text: side + ". Not counted: " + (REASON[i.reason] || "It didn't pass the check.") }), card.firstChild);
+        return card;
+      });
+      body.push(el("details", { class: "more" }, [el("summary", { text: "Not counted, and why (" + aside.length + ")" })].concat(rows)));
+    }
+    var card = el("details", { class: "card" }, [summary, el("div", { class: "body" }, body)]);
+    if (index === 0) card.setAttribute("open", "");
+    return card;
+  }
+
+  var app = document.getElementById("app");
+  app.appendChild(el("div", { class: "eyebrow", text: "Evidence check" }));
+  app.appendChild(el("h1", { text: data.idea }));
+  app.appendChild(el("p", { class: "meta", text: data.date + " · Whose words were counted: " + data.who_counts }));
+  app.appendChild(el("p", { class: "notice", text: "This page shows what a web search found about your assumptions. It does not say whether the idea is good. Only real customers can tell you that." }));
+
+  var openAll = el("button", { type: "button", text: "Open everything" });
+  var closeAll = el("button", { type: "button", text: "Close everything" });
+  var print = el("button", { type: "button", text: "Print or save as PDF" });
+  app.appendChild(el("div", { class: "toolbar" }, [openAll, closeAll, print]));
+  function setAll(open) {
+    Array.prototype.forEach.call(document.querySelectorAll("details"), function (d) { d.open = open; });
+  }
+  openAll.addEventListener("click", function () { setAll(true); });
+  closeAll.addEventListener("click", function () { setAll(false); });
+  print.addEventListener("click", function () { setAll(true); window.print(); });
+  window.addEventListener("beforeprint", function () { setAll(true); });
+
+  (data.assumptions || []).forEach(function (a, i) { app.appendChild(assumptionCard(a, i)); });
+
+  var later = (data.interviews_only || []);
+  if (later.length || (data.not_checked || []).length) {
+    app.appendChild(el("h2", { text: "A web search can't answer these" }));
+    var panel = el("div", { class: "panel" }, []);
+    if (later.length) panel.appendChild(el("ul", { class: "clean" }, later.map(function (x) {
+      return el("li", {}, [el("strong", { text: x.statement }), el("span", { text: " Why: " + x.reason })]);
+    })));
+    if ((data.not_checked || []).length) {
+      panel.appendChild(el("p", { class: "who", style: "margin:12px 0 6px", text: "Could be looked up, but wasn't this time:" }));
+      panel.appendChild(list(data.not_checked));
+    }
+    app.appendChild(panel);
+  }
+
+  app.appendChild(el("h2", { text: "Ask real people" }));
+  var qPanel = el("div", { class: "panel" }, [el("p", { class: "who", style: "margin:0 0 6px", text: "Talk to: " + data.talk_to })]);
+  (data.questions || []).forEach(function (q, i) {
+    var id = "q" + i;
+    var box = el("input", { type: "checkbox", id: id });
+    var row = el("div", { class: "q" }, [box, el("label", { "for": id }, [
+      el("span", { text: (i + 1) + ". " + q.text + " " }), el("span", { class: "tests", text: "(tests " + q.tests + ")" })
+    ])]);
+    box.addEventListener("change", function () { row.className = box.checked ? "q done" : "q"; });
+    qPanel.appendChild(row);
+  });
+  var copy = el("button", { type: "button", class: "noprint", style: "margin-top:12px", text: "Copy the questions" });
+  copy.addEventListener("click", function () {
+    var text = (data.questions || []).map(function (q, i) { return (i + 1) + ". " + q.text; }).join("\n");
+    function done(ok) { copy.textContent = ok ? "Copied" : "Select the questions and copy them by hand"; }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+    else done(false);
+  });
+  qPanel.appendChild(copy);
+  app.appendChild(qPanel);
+
+  if ((data.products || []).length) {
+    app.appendChild(el("h2", { text: "Already out there" }));
+    app.appendChild(el("div", { class: "panel" }, [
+      el("ul", { class: "clean" }, data.products.map(function (p) {
+        return el("li", {}, [link(p.link, p.name), el("span", { text: ": " + p.fact })]);
+      })),
+      el("p", { class: "who", style: "margin:10px 0 0", text: "Only what came up during the search. Not a full list." })
+    ]));
+  }
+
+  var counted = 0, context = 0, aside = 0, removed = 0;
+  (data.assumptions || []).forEach(function (a) { (a.items || []).forEach(function (i) {
+    if (i.result === "removed") removed++; else if (i.result === "set aside") aside++;
+    else if (i.side === "context") context++; else counted++;
+  }); });
+  var c = data.checked || {};
+  var how = el("details", { class: "card" }, [
+    el("summary", {}, [el("span", { class: "statement", style: "margin:0;font-size:16px", text: "How this was checked" })]),
+    el("div", { class: "body" }, [
+      el("p", { class: "explain", text: plural(c.searches || 0, "search", "searches") + " and " + plural(c.pages_read || 0, "page read", "pages read") +
+        ". Every quote on this page was looked up again on its own page by a separate check that never saw the searching. " +
+        counted + " counted, " + context + " shown as background, " + aside + " not counted, " + removed + " removed." }),
+      el("h3", { style: "font-size:14px;margin:0 0 8px", text: "What the labels mean" }),
+      list([
+        "Counted: a person describing their own experience, or an organisation stating its own facts, on a page that was opened and checked, speaking directly about the assumption.",
+        LABEL.supported[0] + ": " + LABEL.supported[1],
+        LABEL.contradicted[0] + ": " + LABEL.contradicted[1],
+        LABEL.mixed[0] + ": " + LABEL.mixed[1],
+        LABEL.thin[0] + ": only one side turned up, and it is one person, one page, or opinions only.",
+        LABEL.nothing[0] + ": " + LABEL.nothing[1]
+      ])
+    ])
+  ]);
+  var unread = data.unread_pages || {};
+  if (unread.count) {
+    var p = el("p", { class: "explain", text: plural(unread.count, "relevant page was", "relevant pages were") + " found and not read. " });
+    var stuck = unread.wouldnt_open || [];
+    if (stuck.length) {
+      p.appendChild(document.createTextNode("These wouldn't open, and you can try them yourself: "));
+      stuck.forEach(function (s, i) { if (i) p.appendChild(document.createTextNode(", ")); p.appendChild(link(s.link, s.site || s.link)); });
+      p.appendChild(document.createTextNode("."));
+    }
+    how.lastChild.appendChild(p);
+  }
+  app.appendChild(el("h2", { text: "The small print" }));
+  app.appendChild(how);
+  app.appendChild(el("footer", { text: "Made with the evidence-check skill. A web search is a starting point, not a verdict." }));
+  document.title = "Evidence check: " + data.idea;
+})();
+</script>
+</body>
+</html>

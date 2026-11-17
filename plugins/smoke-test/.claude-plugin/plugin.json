@@ -1,0 +1,15 @@
+{
+  "name": "smoke-test",
+  "version": "0.2.2",
+  "description": "Turns a student team's interview findings into one well-built smoke test and a launch pack designed for their product: the page to publish, posts and print pieces as images, image prompts, captions, setup and boosting steps, and a tracking sheet. Checks the plan independently and reads results against lines set in advance. Leverage by BCE, Berkley Center for Entrepreneurship, NYU Stern.",
+  "author": {
+    "name": "Nayan Kanaparthi, Berkley Center for Entrepreneurship, NYU Stern"
+  },
+  "keywords": [
+    "smoke test",
+    "demand test",
+    "entrepreneurship",
+    "NYU Stern",
+    "Leverage by BCE"
+  ]
+}
