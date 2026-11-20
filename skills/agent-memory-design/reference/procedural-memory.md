@@ -83,4 +83,4 @@ The rest are the standing test "A procedure is suggested only at the set count a
 - Section 3, only if the agent may suggest procedures: one row under Procedural memory for suggested and learned procedures, with the source `agent worked out`, entering as `unconfirmed`. A procedure learned from episodes is a row in that table, not a row in section 4.
 - Section 4, then: the line `- Episodes before a procedure is suggested: 3 episodes`. The number is the one the person set, or the starting value. With no episodic memory there is nothing to count: write `none: <why>`, and a person writes each procedure.
 - Section 9, only then: "A procedure is suggested only at the set count and is not live before approval".
-- Section 10: the count of episodes and the limit on live procedures, as arbitrary numbers.
+- Section 10: the count of episodes and the limit on live procedures, each with its source in square brackets. Both are starting values: `[default: the share of suggested procedures the person rejects]` for the count, `[default: how often the limit is reached]` for the limit (`reference/every-store.md`).

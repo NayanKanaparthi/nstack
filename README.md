@@ -85,7 +85,7 @@ I haven't tested that command against nstack yet, so treat it as a starting poin
 
 | Skill | What it does |
 |---|---|
-| [agent-memory-design](skills/agent-memory-design) | When you plan or build an agent with Claude, works out the agent's memory system (what gets saved, how it comes back, when it expires, what wakes the agent later, and how nothing happens twice), writes the design into your project and builds it with tests. |
+| [agent-memory-design](skills/agent-memory-design) | When you plan or build an agent with Claude, works out the agent's memory system (what gets saved, how it comes back, when it expires, what wakes the agent later, and how nothing happens twice), writes the design into your project and builds it with tests, or reviews the memory an existing agent already has. |
 | [ai-pricing-strategy](skills/ai-pricing-strategy) | Runs a staged pricing session for an AI product or feature, grounded in value created and willingness to pay. Ends in a defensible price range and model, the risks, and what to validate first. |
 | [evidence-check](skills/evidence-check) | Checks the assumptions behind a product or startup idea against evidence on the web, for and against, without judging the idea. Built for entrepreneurship classes at the Berkley Center. |
 | [venture-assessor](skills/venture-assessor) | Takes a startup idea to a founder-grade decision memo: evidence-first problem framing, competitor mapping, beachhead selection, beachhead TAM, validation design and go-to-market options. |

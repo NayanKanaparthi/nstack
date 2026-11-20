@@ -13,7 +13,7 @@ Answer these for this agent, in your own notes. They come from the video and the
 
 Sort what must survive:
 
-- Something true that stays true until it is changed goes to semantic memory.
+- Something true that stays true until it is changed goes to semantic memory. If nothing will ever tell the app that it changed (a person's role, where they want to be reached) and people rely on it, it is a fact with no end, and step 3 has you say how it is kept true.
 - What happened in one past run goes to episodic memory.
 - How to work goes to procedural memory.
 - Something to do at a later time goes to prospective memory.

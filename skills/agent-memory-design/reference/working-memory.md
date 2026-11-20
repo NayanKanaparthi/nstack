@@ -18,9 +18,10 @@ Working memory is not given, it is built. Your app decides on every call what to
 
 ## Defaults
 
-- **A fixed order.** Put the call together the same way every time: instructions, then the current request, then confirmed facts, then content to read (what was looked up for this request, at most one past episode, summaries of old messages), then recent messages when the agent keeps a conversation. A fixed order makes runs comparable and makes trimming predictable. When the request itself comes from outside, such as a customer's email or a pasted document, the task ("draft a reply to this email") goes in as the request and the outside text goes in with the content to read. (ours)
+- **A fixed order.** Put the call together the same way every time: instructions, then the current request, then confirmed facts, then content to read (what was looked up for this request, at most one past episode, summaries of old messages), then recent messages when the agent keeps a conversation. A fixed order makes runs comparable and makes trimming predictable. When the request itself comes from outside, such as a customer's email or a pasted document, the task ("draft a reply to this email") goes in as the request and the outside text goes in with the content to read. (ours) A fact with no end that is due keeps its place: its label (when it was last confirmed, `reference/feedback-and-improvement.md`) is part of that fact's line in the facts part, and counts against that part's budget.
 - **Two kinds of text, kept apart.** Facts are confirmed items from semantic memory. Content to read is everything else that came from outside or that the model wrote earlier: the email being answered, a document that was looked up, an episode, a summary. Content to read goes inside a block labelled as material to read, not as instructions and not as facts. (ours)
 - **A size budget per part.** Give each part a share of the context window and trim a part when it goes over its share, so one huge tool result cannot push the instructions or the request out. The shares are arbitrary starting values. (ours)
+- **A time budget for reads when someone waits.** When a person is waiting for the answer, every memory read that feeds the call runs under a time allowed, and the call is built without whatever did not arrive. The fixed order does not change: a part that did not arrive is left empty. (ours)
 - **What is never trimmed:** the instructions, the current request, and any approval or safety text. (ours)
 - **What is shortened first:** old tool results, then old messages if there are any. Shorten by summarizing, and keep the summary so it is not redone on every call. (video says keep, summarize or remove; the order is ours)
 - **A kept summary is a saved store.** So is a kept conversation. Each gets a row in section 3 of the design under Working memory, with an owner, a scope, an expiry and a size limit, and each is deleted with the owner's data. A summary is written by the model, so its source is `agent worked out` and it enters as `unconfirmed`: it reaches the model only as content to read. Kept messages from a user are `outside content`. (ours)
@@ -68,6 +69,7 @@ When the agent has other stores:
 - When the agent keeps a conversation: run one long enough to force trimming. A fact stated in the first message that was saved to semantic memory must still reach the model. One that was not saved may be gone, and that is correct.
 - Put an unconfirmed fact and an expired fact in the store. Neither may appear in the output.
 - Delete an owner's data. Their kept messages and summaries are gone.
+- When someone waits live: make the fact read slower than its time allowed. The call is built without facts, in the same order, and the run log says memory was left out.
 
 ## In the design file
 
