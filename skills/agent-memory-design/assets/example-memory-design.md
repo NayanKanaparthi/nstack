@@ -12,6 +12,7 @@
 - A6 What it reads that nobody checked: Customer emails. (worked out)
 - A7 What goes wrong if it forgets or misremembers: Forgets: re-asks for an order number, drops a follow-up. Misremembers: honours a promise nobody made, writes in the wrong language, quotes an old policy, emails a customer twice. (worked out)
 - A8 Model, and what it cannot know: The hosted model named in the project's settings file. It cannot know orders, shipping status, the current policy, or anything a customer said before. (worked out)
+- A9 Also true of this agent: a model turns text into facts. The model reads a reply language out of a customer's email and infers facts about the customer. Nobody waits live: drafts are made when an email arrives and staff open them later. One route changes each fact, and the shop expects a few hundred emails a week. (worked out)
 
 ## 2. Memory types
 | Memory type | Decision | Reason |
@@ -43,6 +44,10 @@
 - Kinds that hold a list: Claims a customer makes about what the shop owes them; Facts the model infers about a customer
 - Who may confirm an unconfirmed item: support staff, on the case screen. The owner, for a suggested procedure. The customer, for a reply language read back to them, by the button in the reply
 - Expired rows are removed by: Cleanup of expired rows
+- Extraction output is checked by: Extraction output checked before saving
+- Extraction test set: tests/extraction_cases.json, scored by tests/score_extraction.py
+- Extraction prompt is improved by: the optimizer script scripts/optimize_extraction.py, at most 150 metric calls, at least 20 examples
+- Storage: tables. A customer's facts are looked up by customer, and no question follows a link
 
 ## 4. Procedures
 | Procedure | Rule | If skipped once | Lives in | Where | Guards | Test |
@@ -54,11 +59,13 @@
 | A send cannot happen twice | design: every send is claimed by its key in one transaction before the mail service is called | sends something out, the same email twice after a crash or a retry | code | run_action() in agent/actions.py, the one function every send passes through | Send a reply email; Send a follow-up email | test_one_key_one_send in tests/test_actions.py |
 | No refunds by the agent | person: the agent never issues a refund | costs money | code | the tool list in agent/tools.py leaves the refund tool out | none | test_model_has_no_refund_tool in tests/test_tools.py |
 | Fact entry rules | design: code sets each fact's source from how it arrived; claims from emails are saved unconfirmed | corrupts memory, a stranger's claim is treated as true in later replies | code | save_fact() in memory/facts.py sets the source and the status | none | test_email_claim_is_unconfirmed in tests/test_facts.py |
+| Extraction output checked before saving | design: what the model proposes is checked against the schema (kind, subject, value, a kind from the list), retried once, and dropped if it is broken twice | corrupts memory, a malformed or made-up item is saved as a fact about a customer | code | check_extraction() called by extract_facts() in memory/extract.py | none | test_broken_extraction_saves_nothing in tests/test_extract.py |
 | Only the sender's own orders | design: an order is returned only when its email address matches the sender's | leaks data, a customer reads someone else's order | code | find_order() in memory/retrieval.py | none | test_other_customers_order_is_not_returned in tests/test_retrieval.py |
 | Episode only after the outcome | design: an episode is written only after staff approve, edit or reject, and only when the run teaches something | corrupts memory, a run nobody checked teaches the next one | code | write_episode() in memory/episodes.py | none | test_no_episode_without_staff_decision in tests/test_episodes.py |
 | A suggested procedure stays off until the owner approves | design: a suggestion is never loaded with the instructions until the owner approves it | corrupts memory, a rule nobody read changes every later reply | code | approve_procedure() in memory/procedures.py, and build_context() loads approved versions only | none | test_suggestion_absent_until_approved in tests/test_procedures.py |
 | A task is claimed before it acts | design: a follow-up task moves from pending to running in one step before it does anything | sends something out, two firings of one task both draft a follow-up | code | on_wake() in agent/tasks.py | none | test_task_fired_twice_drafts_once in tests/test_tasks.py |
-| Catch up on missed emails | design: when the app starts, every email that arrived while it was down, back 7 days, is handled like a new one | harmless, a late reply that staff see on the case screen | code | catch_up() in agent/inbox.py | none | test_missed_email_handled_once in tests/test_inbox.py |
+| A changed case closes its follow-up tasks | design: when a case's status or its last customer email changes, its open follow-up tasks are closed as no longer valid in the same transaction, and a waking task whose saved values differ from the case does nothing | sends something out, a follow-up to a customer who already replied | code | change_case() in agent/cases.py, and on_wake() in agent/tasks.py | none | test_old_follow_up_does_nothing_after_reply in tests/test_tasks.py |
+| Catch up on missed emails | design: when the app starts, and when the memory store answers again after it was down, every email not yet handled, back 7 days, is handled like a new one | harmless, a late reply that staff see on the case screen | code | catch_up() in agent/inbox.py | none | test_missed_email_handled_once in tests/test_inbox.py; test_email_that_waited_through_store_outage_handled_once in tests/test_inbox.py |
 | Cleanup of expired rows | design: expired rows are removed from every store each night, and each removal is written to the audit log | leaks data, content kept past the time the shop promised | code | cleanup() in memory/cleanup.py, run by the nightly timer job | none | test_cleanup_removes_and_audits in tests/test_cleanup.py |
 - Episodes before a procedure is suggested: 3 episodes
 - What wakes the app: a timer job every minute that checks the tasks table and the inbox, and a nightly timer job for cleanup
@@ -77,6 +84,9 @@
 - Who may approve: support staff, signed in to the case screen
 - An approval lasts: 24 hours
 - A claimed action is held for: 15 minutes
+- Risk of each action: Send a reply email: sends something out; Send a follow-up email: sends something out
+- Limits: none: each email goes to the one customer on the case, and code takes the address from the case
+- Open-ended tools: none
 
 ## 6. Retrieval
 | What it looks for | Where it lives | Method | Filters | Checks on results |
@@ -87,19 +97,22 @@
 | A similar past case | Episodes | embedding search | Same kind of problem, this shop, not expired | Other customers' details are not in the result |
 | The customer's facts | Facts table | exact lookup | This customer, confirmed, not expired, not replaced | none beyond the filters |
 - Retrieval test set: tests/retrieval_cases.json, scored by tests/score_retrieval.py
+- Reranker: none: not measured yet. The retrieval test set will show whether the right past case is in the first 20 and missing from the one that reaches the model
 
 ## 7. Future tasks
 | Task | Trigger | Holds | Checks again on waking | Statuses |
 |---|---|---|---|---|
-| Follow up on an unanswered reply | time, 9am on the fourth working day after the reply was sent | Case id, what to draft, approval needed | Has the customer replied, was the case closed, what is the order's status now | pending, running, waiting for approval, done, cancelled, failed |
+| Follow up on an unanswered reply | time, 9am on the fourth working day after the reply was sent | Case id, what to draft, approval needed | Has the customer replied, was the case closed, what is the order's status now | pending, running, waiting for approval, done, cancelled, no longer valid, failed |
 - A running task goes back to pending after: 10 minutes
+- Premise of each task: Follow up on an unanswered reply: values of the case: status, time of the last customer email
+- A changed record cancels or replaces its tasks through: A changed case closes its follow-up tasks
 
 ## 9. Tests
 | Test | Where |
 |---|---|
 | Every run is logged | test_run_is_logged in tests/test_run_log.py; test_old_log_entry_removed_by_cleanup in tests/test_run_log.py; test_run_stopped_at_step_limit in tests/test_run_log.py; test_repeated_email_logged_as_run in tests/test_run_log.py |
 | Expired items never come back | test_expired_fact_and_episode_not_returned in tests/test_expiry.py; test_claims_gone_when_case_closes in tests/test_expiry.py |
-| A repeat, a contradiction or two saves at once leave one current item | test_language_replaced_and_repeat_ignored in tests/test_facts.py; test_two_saves_at_once in tests/test_facts.py |
+| A repeat, a contradiction or two saves at once leave one current item | test_language_replaced_and_repeat_ignored in tests/test_facts.py; test_two_saves_at_once in tests/test_facts.py; test_second_current_fact_refused_by_database in tests/test_facts.py; test_replaced_version_keeps_its_times in tests/test_facts.py |
 | Outside content stays unconfirmed and the model cannot set the source | test_email_claim_is_unconfirmed in tests/test_facts.py; test_model_cannot_claim_user_stated in tests/test_facts.py; test_language_off_the_list_is_unconfirmed in tests/test_facts.py; test_language_from_other_sender_unconfirmed in tests/test_facts.py; test_inexact_confirm_reply_confirms_nothing in tests/test_facts.py; test_actions_record_never_in_model_call in tests/test_context.py |
 | Delete removes everywhere | test_delete_customer_everywhere in tests/test_delete.py |
 | Secrets are never saved or sent out | test_card_number_refused_everywhere in tests/test_secrets.py; test_card_number_in_draft_not_sent in tests/test_secrets.py |
@@ -111,13 +124,45 @@
 | A task fired twice acts once and a stuck task runs again | test_task_fired_twice_drafts_once in tests/test_tasks.py; test_stuck_task_runs_again in tests/test_tasks.py; test_crash_after_approval_sends_once in tests/test_tasks.py; test_held_send_leaves_task_open in tests/test_tasks.py |
 | An episode is written only after the outcome, only when it teaches, and carries no outside text | test_no_episode_without_staff_decision in tests/test_episodes.py; test_approved_as_written_saves_no_episode in tests/test_episodes.py; test_planted_sentence_not_in_episode in tests/test_episodes.py |
 | A procedure is suggested only at the set count and is not live before approval | test_two_episodes_no_suggestion in tests/test_procedures.py; test_suggestion_absent_until_approved in tests/test_procedures.py; test_three_episodes_one_run_no_suggestion in tests/test_procedures.py; test_episode_against_stops_suggestion in tests/test_procedures.py |
+| Extraction output is checked, versioned and scored | test_broken_extraction_saves_nothing in tests/test_extract.py; test_extraction_twice_saves_once in tests/test_extract.py; test_facts_listed_by_prompt_version in tests/test_extract.py; test_correction_reason_set_by_code in tests/test_extract.py; test_lower_scoring_prompt_refused in tests/test_extract.py; test_optimizer_refuses_below_minimum in tests/test_optimizer.py; test_optimizer_writes_candidate_and_leaves_live_prompt in tests/test_optimizer.py; test_approved_candidate_becomes_new_version in tests/test_optimizer.py |
+| A task whose reason changed does nothing | test_follow_up_closed_when_case_status_changes in tests/test_tasks.py; test_old_follow_up_does_nothing_after_reply in tests/test_tasks.py; test_follow_up_after_new_reply_still_sent in tests/test_tasks.py; test_case_change_closes_open_tasks in tests/test_tasks.py; test_follow_up_running_when_case_changes_sends_nothing in tests/test_tasks.py |
+| Risk is fixed in code and limits hold | test_model_cannot_lower_risk in tests/test_actions.py; test_tool_without_risk_label_refused in tests/test_tools.py |
+| Embeddings are made on save, and a reranker earns its place | test_embedding_made_on_save_not_on_search in tests/test_retrieval.py |
 
 ## 10. Open questions and arbitrary numbers
-- 12 months for customer facts and thread summaries was the owner's answer.
-- 24 hours for an approval is a starting value. Nobody chose it. The owner should set it.
-- 30 days for the run log, and 90 days, 18 months, 24 months and 30 days elsewhere, are starting values the owner has not confirmed.
-- The catch-up looks back 7 days. That is a starting value. The episode copy check refuses 8 words in a row copied from the email, also a starting value.
-- A procedure is suggested when 3 separate episodes carry the same lesson and none goes against it. The 3 is arbitrary.
-- The size limits (50 current facts, 2,000 words, 500 steps, 200 per kind of problem, 20 live learned procedures, 5 pending tasks) are starting values.
-- 10 minutes before a running task goes back to pending, and 15 minutes for which a claimed send is held, are starting values.
-- "Fourth working day" for the follow-up is a guess. The owner said "if they do not reply" without a number.
+- 12 months for customer facts and thread summaries was the owner's answer. [policy]
+- 24 hours for an approval is a starting value. Nobody chose it. The owner should set it. [policy, not told yet]
+- 30 days for the run log, and 90 days, 18 months, 24 months and 30 days elsewhere, are starting values the owner has not confirmed. [policy, not told yet]
+- The catch-up looks back 7 days. That is a starting value. [default: emails found older than the look-back] The episode copy check refuses 8 words in a row copied from the email, also a starting value. [default: episodes refused that copied nothing]
+- A procedure is suggested when 3 separate episodes carry the same lesson and none goes against it. The 3 is arbitrary. [default: the share of suggested procedures the owner rejects]
+- The size limits (50 current facts, 2,000 words, 40 characters for the sign-off, 500 steps, 200 per kind of problem, 20 live learned procedures, 5 pending tasks) are starting values. [default: how often each limit is reached]
+- 10 minutes before a running task goes back to pending, and 15 minutes for which a claimed send is held, are starting values. [default: tasks and sends taken over while the first run was still working]
+- "Fourth working day" for the follow-up is a guess. The owner said "if they do not reply" without a number. [policy, not told yet]
+- The optimizer may make 150 metric calls a run. That is a starting value the owner has not set. [policy, not told yet] It refuses to run on fewer than 20 examples, also a starting value. [default: how much the score moves when one example is added]
+- The alert lines (10 saved wrong a week, 3 calls, 5 percent, 10 facts) are starting values. [default: alerts that fire with nothing wrong]
+- The alert lines for writes dropped and jobs set to failed (0 writes, 0 jobs) fire on the first one, since none is expected. [default: alerts that fire with nothing wrong]
+- The retrieval test set is read at the first 20 results and at the one that reaches the model. The 20 is a starting value. [default: right past cases found only below the first 20]
+- A model's reading counts as saved wrong when the customer's later words disagree with it within 14 days of the reading. That is a starting value. [default: the share of test set rows a person rejects on review]
+
+## 11. Failures
+| What fails | Answers | Actions | Test |
+|---|---|---|---|
+| memory store slow or down | none: no draft is made. The email waits and is handled like a missed one once the store is back, and the case screen shows that memory is down from the app's own state, not from the store | blocked | test_store_down_email_waits_and_sends_blocked in tests/test_failures.py |
+| search or embedding service down | without memory, the draft is made with no past case | as usual | test_search_down_drafts_without_past_case in tests/test_failures.py |
+| broken model output | as usual | as usual | test_broken_extraction_saves_nothing in tests/test_extract.py |
+| a background job crashes partway | as usual | as usual | test_cleanup_stopped_halfway_finishes_on_next_run in tests/test_failures.py |
+| a bad extraction prompt shipped | as usual | as usual | test_bad_prompt_version_facts_marked_for_review in tests/test_failures.py |
+| the scheduler down | as usual | as usual, missed emails and follow-ups are caught up once | test_missed_email_handled_once in tests/test_inbox.py |
+| cleanup not running | as usual, expired items are still left out on read | as usual | test_expired_fact_and_episode_not_returned in tests/test_expiry.py |
+
+## 12. Measurements
+| Measure | Recorded in | Alert line |
+|---|---|---|
+| saved wrong vs world changed | the corrections table, counted weekly | above 10 saved wrong a week |
+| extra model calls per turn | the run log, one number per run | above 3 calls |
+| share of turns run without memory | the run log, counted daily | above 5 percent |
+| facts saved per run | the run log, one number per run | above 10 facts |
+| tasks closed as no longer valid | the tasks table, counted weekly | none: expected whenever a customer replies |
+| writes dropped | the measures table, counted hourly | above 0 writes |
+| jobs set to failed | the jobs table, counted hourly | above 0 jobs |
+- A measure is read back by: test_turns_without_memory_is_counted in tests/test_measures.py

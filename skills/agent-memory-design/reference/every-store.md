@@ -10,12 +10,13 @@ Every saved item, in every store, has an owner, a scope, an expiry and a size li
 
 **Owner when there are no accounts.** If the agent has no users it can tell apart, the owner is whoever runs the app. (ours)
 
-**Expiry is written in one of four forms** (ours), and two can be joined with a semicolon:
+**Expiry is written in one of five forms** (ours), and two can be joined with a semicolon:
 
 - a set time after something: `90 days after the run`,
 - an event, ending in `told` or `asked` (below): `when the order is delivered, told`,
 - replacement: `replaced when the owner states a new one`,
 - `permanent: <the reason>`. Most things that feel permanent are not.
+- no end: `no end, checked by evidence`, for a fact nothing ends and people rely on (`reference/feedback-and-improvement.md`). It is not a row with no expiry: the fact is kept, and evidence, not a date, says how sure the agent can still be.
 
 **How code acts on an expiry by event.** (ours) Save the name of the event and the id it is about, such as "order delivered" for order 4412. Then one of two ways, and the expiry says which, as its last word:
 
@@ -42,17 +43,79 @@ In the design file the run log is the one row in section 3 with the memory type 
 
 ## Starting values
 
-Offer these when the person has no number in mind. Every one is arbitrary and ours. Each number you use goes in section 10 of the design, marked as a starting value until the person sets it.
+Offer these when the person has no number in mind. Every one is ours. Each number you use goes in section 10 of the design with its source (`steps/3-design.md`, section 10).
 
-| What | Starting value |
-|---|---|
-| Run log | 30 days after the run, 500 steps per run |
-| Audit log | 24 months after the entry was written |
-| Facts per owner | 50 |
-| A fact the model inferred and nobody confirmed | 30 days after it was inferred |
-| Episodes | 18 months after writing, 200 per kind of task |
-| Live procedures learned from episodes | 20 |
-| Closed tasks, approvals, records of actions | 90 days. The record of actions outlasts the catch-up and any redelivery or retry window |
+| What | Starting value | Source |
+|---|---|---|
+| Run log | 30 days after the run, 500 steps per run | policy for the days; default for the steps (measure: runs stopped at the limit) |
+| Audit log | 24 months after the entry was written | policy |
+| Facts per owner | 50 | default (how often the limit is reached) |
+| A fact the model inferred and nobody confirmed | 30 days after it was inferred | policy |
+| Episodes | 18 months after writing, 200 per kind of task | policy for the months; default for the count |
+| Live procedures learned from episodes | 20 | default (how often the limit is reached) |
+| Closed tasks, approvals, records of actions | 90 days. The record of actions outlasts the catch-up and any redelivery or retry window | policy |
+| Review age and cap of a fact with no end | 90 days, at most 1 year, for a preference. 180 days, at most 2 years, for a role or a standing fact. 30 days, at most 90 days, for the row that takes facts of no listed kind | default (the kind's correction rate, and its learned review age once measured) |
+| The wait after a confirmation | 2 times longer | default (facts corrected soon after their wait was lengthened) |
+| Prior for a source | 9 of 10 answers for `user stated` and `system record`, 5 of 10 answers for `agent worked out` and `outside content` | default (the kind's measured rate) |
+| When a kind's own rate replaces the prior | its 95 percent interval is narrower than 20 points | default (kinds whose rate moves a lot after the switch) |
+| Learned review age | the age by which 10 percent of the kind's facts were corrected | default (the share of facts corrected before their first review) |
+| Alert on a kind's rate | a drop of 15 points between two runs of the job | default (alerts that fire with nothing wrong) |
+| Seen with no correction counts after | 7 days | default (corrections that arrive after the window) |
+| Optimizer budget | 150 metric calls a run | policy |
+| Fewest examples the optimizer runs on | 20 | default (how much the score moves when one example is added) |
+| A limit on an action (an amount, a number of recipients, a list of who it may reach) | none: ask | policy |
+| Freshness window before a risky action | a third of the fact's review age | default (risky actions that had to wait for a confirmation, and corrections that arrive just after one went ahead) |
+| How long a task waits for confirmation before it ends | 7 days | default (waits that ended with no answer, and answers that came after the wait had ended) |
+| Time allowed for memory reads before the model call | the stated response time less what the model call needs, or 300 ms | requirement, or default (memory read time for the slowest 5%) |
+| An alert line | none: pick from the first weeks of numbers | default (alerts that fire with nothing wrong, and failures no alert caught) |
+| Counter roll-up | every 15 minutes | default (how far the counters lag the events) |
+| Replaced versions move to cheaper storage | after 12 months | default (how often an old version is read) |
+| Extra model calls per turn | at most 2 | default (turns that reach the cap) |
+| How long a worker holds a job | 10 minutes, and always longer than the longest a job may take | default (jobs taken by a second worker while the first still runs) |
+| Tries before a job is set to `failed` | 5 | default (jobs set to failed that a later try would have finished) |
+| Writes kept in the spool while the store is down | 1,000 | default (writes dropped) |
+| Numbers kept in the process while the store is down | 10,000 | default (numbers lost in an outage) |
+| Time allowed for the quick check that the store is up | 100 ms | default (actions blocked while the store was up) |
+| How old a model's reading can be and still count as saved wrong when the person's later words disagree | 14 days | default (the share of test set rows a person rejects on review) |
+
+Which source the usual numbers have:
+
+| Number | Source | The measure to name, for a default |
+|---|---|---|
+| How long anything is kept: every expiry of the form `<number> <unit> after` (run log, audit log, facts, episodes, summaries, closed tasks, approvals, records of actions) | policy | |
+| How long an approval lasts | policy | |
+| A time or a count the person's own request sets (when a follow-up goes out, how many reminders) | policy | |
+| A number an outside system or a standard fixes (a provider's limit, a protocol's timeout). Not an expiry or an approval lifetime: those stay policy | requirement, written `[requirement: <the system> allows N = N]`, like `[requirement: the mail service allows 25 MB = 25 MB]` | |
+| A size limit (facts per owner, episodes per kind, live procedures, pending tasks, words per summary) | default | how often the limit is reached |
+| Steps per run in the run log | default | runs stopped at the limit |
+| Episodes before a procedure is suggested | default | the share of suggested procedures the person rejects |
+| How often the app is woken | default | how late a firing is handled |
+| How far the catch-up looks back | default | firings found older than the look-back |
+| How long a running task waits before it goes back to pending | default | tasks returned to pending while still running |
+| How long a claimed action is held | default | actions taken over while the first run was still working |
+| The episode copy check length, a count of tries, any other tuning value | default | name the measure |
+| Review age and cap of a fact with no end | default | the kind's correction rate, and its learned review age once measured |
+| The wait after a confirmation | default | facts corrected soon after their wait was lengthened |
+| Prior for a source | default | the kind's measured rate |
+| When a kind's own rate replaces the prior | default | kinds whose rate moves a lot after the switch |
+| Learned review age | default | the share of facts corrected before their first review |
+| Alert on a kind's rate | default | alerts that fire with nothing wrong |
+| Seen with no correction counts after | default | corrections that arrive after the window |
+| Optimizer budget | policy | |
+| Fewest examples the optimizer runs on | default | how much the score moves when one example is added |
+| A limit on an action (an amount, a number of recipients, a list of who it may reach) | policy | |
+| Freshness window before a risky action | default | risky actions that had to wait for a confirmation, and corrections that arrive just after one went ahead |
+| How long a task waits for confirmation before it ends | default | waits that ended with no answer, and answers that came after the wait had ended |
+| Time allowed for memory reads before the model call | requirement when the person stated a response time, written like `[requirement: 2 seconds for the reply - 1.7 seconds for the model = 300 ms]`; default otherwise | memory read time for the slowest 5% |
+| The number in an alert line | default | alerts that fire with nothing wrong, and failures no alert caught |
+| How often counters are rolled up | default | how far the counters lag the events |
+| When replaced versions move to cheaper storage | default | how often an old version is read |
+| Extra model calls per turn | default | turns that reach the cap |
+| How long a worker holds a job, tries before a job fails, the spool and the numbers kept in the process, the quick check of the store | default | as in the table above |
+| How many candidates a reranker takes, and how many it keeps | default, or data once measured | questions whose right item the reranker moves down, or leaves out |
+| A reranker's two counts from the retrieval test set (the right item in the wide pass, and in what reaches the model) | data, written like `[data: tests/score_retrieval.py on tests/retrieval_cases.json]` | |
+| The expected volume (users, facts, runs) | requirement when the person stated it, written like `[requirement: 2,000 people x 10 runs a day = 20,000]`; data when measured from records | |
+| How old a model's reading can be and still count as saved wrong | default | the share of test set rows a person rejects on review |
 
 ## 3. Repeats and contradictions
 
@@ -79,12 +142,14 @@ A fact that was corrected in the table but not in the index keeps coming back in
 (ours) When a user deletes an item, or asks for all their data to be deleted, it goes from every place it lives:
 
 - the table,
+- a fact's old versions and, for a fact with no end, its fact events (`reference/feedback-and-improvement.md`),
 - the search index,
 - the run log,
 - any episode that mentions it,
 - summaries of old messages that include it,
 - any temporary copy kept for speed (called a cache),
 - the record of actions taken: what was sent and what is needed to redo it. Each action's key, status and times stay, for as long as the same action could be started again, so a repeat after the delete is still stopped (`reference/side-effects.md`).
+- the spool and the set-aside file of `reference/production.md`: that owner's writes waiting there (and `drain_spool` skips a write whose owner was deleted). Job rows and measure rows hold ids and counts, not content.
 
 Write one delete function per owner that knows every store, and add each new store to it when the store is built. The audit log keeps a record that a delete happened, without the deleted content.
 
@@ -94,7 +159,7 @@ Write one delete function per owner that knows every store, and add each new sto
 
 - Do the read, the check and the write of a save inside one transaction. Or keep a version number on the row and refuse a write that was based on an old version.
 - For future tasks, taking a task out of `pending` is a single step that either happens fully or not at all (an atomic step), so two firings cannot both take it.
-- For anything that must be one of a kind (one current value per owner and one-value kind, one row per idempotency key), put the rule in the database itself, where it is called a unique constraint: the database refuses a second row with the same value. A rule that lives only in the code can be beaten by two runs at once.
+- For anything that must be one of a kind (one current value per owner and one-value kind, one row per idempotency key), put the rule in the database itself, where it is called a unique constraint: the database refuses a second row with the same value. A rule that lives only in the code can be beaten by two runs at once. For facts this is a partial unique index: a uniqueness rule over the current rows only, so the history can hold as many old versions as it needs.
 
 ## 7. Size limits
 
@@ -104,7 +169,7 @@ The design writes each limit as a number and what happens when it is reached: th
 
 ## 8. An audit log
 
-(ours) A record of every write, change, confirm, delete, approval and side effect: who or what did it, when, on which item. Reads of sensitive items too, if the agent handles any. It is how you answer "why did the agent do that" a month later. It never goes into a model call, and neither does the record of actions. Entries are added and never changed, and it does not hold the content of deleted items or any secret.
+(ours) A record of every write, change, confirm, delete, approval and side effect: who or what did it, when, on which item. Reads of sensitive items too, if the agent handles any. It is how you answer "why did the agent do that" a month later. It never goes into a model call, and neither does the record of actions. Entries are added and never changed, and it does not hold the content of deleted items or any secret. The fact events of a fact with no end (`reference/feedback-and-improvement.md`) are not the audit log: the audit log says who changed memory, fact events say what was learned about a fact, and a correction writes to both.
 
 It is built when the agent saves anything besides the run log, the records of side effects included. An agent whose only store is the run log has nothing to audit. The app's own code writes it.
 
@@ -137,4 +202,4 @@ Also save an item with no owner, or no expiry, into each store. Refused. This be
 - Section 3: the `Run log` row and the line `Run log holds content`. An `Audit log` row when anything else is saved. An expiry and a size limit on every row. The line "Kinds that hold a list".
 - Section 8: one row per agent and store, when A2 says `several agents`.
 - Section 9: the standing tests above that this design needs.
-- Section 10: every number, with whether the person chose it.
+- Section 10: every number, with its source.

@@ -10,7 +10,7 @@ Leafline is a small online tea shop. Priya owns it. Sam is one of her two suppor
 
 ## Step 1: understand the agent
 
-Claude reads the project and the request and answers most of the eight questions itself.
+Claude reads the project and the request and answers most of the nine questions itself.
 
 - A1 What the agent is for: Drafts replies to customer emails about orders, for staff to approve and send. (worked out)
 - A2 Agents and users: one agent. One shop, two support staff, many customers. (worked out)
@@ -20,6 +20,7 @@ Claude reads the project and the request and answers most of the eight questions
 - A6 What it reads that nobody checked: Customer emails. (worked out)
 - A7 What goes wrong if it forgets or misremembers: Forgets: re-asks for an order number, drops a follow-up. Misremembers: honours a promise nobody made, writes in the wrong language, quotes an old policy, emails a customer twice. (worked out)
 - A8 Model, and what it cannot know: The hosted model named in the project's settings file. It cannot know orders, shipping status, the current policy, or anything a customer said before. (worked out)
+- A9 Also true of this agent: a model turns text into facts. The model reads a reply language out of a customer's email and infers facts about the customer. Nobody waits live: drafts are made when an email arrives and staff open them later. One route changes each fact, and the shop expects a few hundred emails a week. (worked out)
 
 A4 and A5 say `asked` because Claude could see the send function, the refund function and the approval step in the project, but two things about them were Priya's to decide. Claude asks three questions in one message:
 
@@ -27,7 +28,7 @@ A4 and A5 say `asked` because Claude could see the send function, the refund fun
 2. "When staff edit a draft before sending, should the agent learn from the edit, and may it suggest a new rule to you when the same edit keeps coming up? I would say yes to both." Priya: yes. (A5)
 3. "How long should we keep what we know about a customer after their last email? I would start with 12 months." Priya: 12 months.
 
-Claude did not ask how long an approval should last. It picked 24 hours as a starting value and told Priya it was arbitrary.
+The agent has more policy numbers than the questions can cover: how long an approval lasts, how long each log and record is kept, when the follow-up goes out. Claude did not ask about these. As step 1 says for a policy number not asked, each got a starting value marked `[policy, not told yet]` in section 10, such as 24 hours for an approval, and when Claude told Priya about the design it listed them as numbers she still has to give. It told her the limits and timings are starting values it will tune.
 
 ## Step 2: decide
 
@@ -54,6 +55,8 @@ Claude did not ask how long an approval should last. It picked 24 hours as a sta
 
 Why the first row is `user stated` and the third is not. Code sets the source, not the model. Both sentences came in emails from the address on Maya's customer record, so the app knows who sent them. The design lists two kinds an owner can set for themselves: a customer's reply language and the shop's tone. Reply language is on the list and Spanish is one of its allowed values, but the model read it out of her words, so it waited, unconfirmed, until she pressed the button in the next reply that read it back to her ("Reply in Spanish from now on? Yes"). Then it entered as confirmed. A claim about what the shop owes is not on the list and never could be. It is a claim about the shop, made by someone who is not the shop. Saved as a confirmed fact, it would make every future reply honour a promise nobody made. The shop's tone is typed by Priya on a settings screen while signed in, with no model in between.
 
+**Facts the model reads out of emails.** The model reads a reply language out of a customer's email and infers other facts about the customer, so Claude added four things. What the model proposes is checked in code against a fixed shape before anything is saved, retried once, and dropped if it is broken twice. Each fact records the version of the prompt that read it. Every fact staff correct because it was saved wrong becomes an example in a test set, and a script scores the prompt against that set. An optimizer script, run by a person and never by the agent, proposes a better prompt for Priya to approve, and a prompt that scores lower is refused. The optimizer's budget, 150 calls a run, is a starting value Priya has not given, so the design marks it `[policy, not told yet]`, and it is on the list of numbers she still has to give.
+
 **Episodic memory.** A case becomes an episode only when staff edited or rejected the draft, something failed, or it was the first case of a new kind. A draft approved as written saves no episode. The short note in an episode is written by the model, so it is never shown as a fact. It is shown in the block of content to read, as a note about a past case.
 
 **Procedural memory.** Each one gets the question "if the model skips this once, what happens?", answered from the fixed list.
@@ -73,6 +76,8 @@ The approval rule and the no-refunds rule are Priya's own words, so the design m
 **Side effects.** A run starts when an email arrives, when staff press approve, or when a follow-up task comes due. Two actions reach outside the system: sending a reply and sending a follow-up. A reply waiting for staff is a row in the record of actions taken, with the status `waiting for approval`. An email can reach the app twice, so the case is found by the email's message id before anything is drafted, and a second delivery finds the case it already opened. Both need staff approval, both carry an idempotency key built from ids saved before the first try, and both are guarded by the two procedures in code above. A timer job over the record of actions picks up a send that started and never finished. If the app was down while emails came in, a catch-up handles every email from the last 7 days that has no case yet, and the message id stops a second reply. The record of actions holds each email's text, which the model wrote, so it is never put in a model call. No email goes out without staff approving its exact text, so no separate content check is needed.
 
 **Prospective memory.** A saved future task per follow-up. A timer job every minute checks the tasks table and the inbox, and a nightly one runs the cleanup.
+
+The follow-up task saves its premise: the values of the case: status, time of the last customer email. When a case's status or its last customer email changes, its open follow-up tasks are closed as no longer valid in the same transaction, and a waking task whose saved values differ from the case does nothing.
 
 ## Step 4: build
 
@@ -111,6 +116,8 @@ Claude builds the tables, the write and read functions, the function that builds
 **Next month.** Maya writes "please reply in English from now on". The model proposes the new reply language, saved unconfirmed as its reading. Code checks that the sender is Maya, that reply language is a kind she can set, and that English is an allowed value, and the next reply staff approve reads it back to her with a button. She presses it, and only then does the English fact replace the Spanish one. The old one is kept as history and never shown to the model.
 
 **A year after her last email.** Her facts stopped coming back from the read function the moment they expired. The nightly cleanup deletes them, with their copies in the search index, and writes each removal to the audit log. If she had written "delete my data", everything she owns would go from every store, the thread summaries, the run log and any episode that mentions her. Only each send's key and status would stay, so the same email could never go out again.
+
+**The night the memory store is down.** An email from Maya arrives while the store that holds her facts, past cases and drafts is down. The read times out, so no draft is made: a draft waits for staff as a row in the record of actions, which is in the same store. The email waits in the mailbox and is handled like a missed one once the store is back. The case screen shows that memory is down from the app's own state, since it cannot read the store to say so. Nothing is sent: with the store down there is no approval to check and no record of what was sent, so every send is blocked until it is back. Once the store is back, the catch-up handles Maya's email once. Priya can watch seven numbers: saved wrong vs world changed (alert above 10 saved wrong a week), extra model calls per turn (above 3 calls), the share of turns run without memory (above 5 percent), facts saved per run (above 10 facts), writes dropped and jobs set to failed (each alerts on the first one), and tasks closed as no longer valid, which has no alert line, because one is expected whenever a customer replies.
 
 ## What this adds to the video's version
 
