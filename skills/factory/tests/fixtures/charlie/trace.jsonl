@@ -1,0 +1,12 @@
+{"actor": "maker", "kind": "agent_call", "model": "old-model", "node": "N1", "span_id": "c1", "start": "2026-01-10T09:00:00Z", "status": "running", "ts": "2026-01-10T09:00:00Z"}
+{"duration_s": 120, "end": "2026-01-10T09:02:00Z", "model": null, "span_id": "c1", "status": "done", "ts": "2026-01-10T09:02:00Z"}
+{"actor": "orchestrator", "end": "2026-01-10T09:03:00Z", "kind": "command", "span_id": "c2", "status": "done"}
+{"actor": "orchestrator", "kind": "command", "span_id": "c3", "status": "done warn", "ts": "2026-01-10T09:04:00Z"}
+{"actor": "orchestrator", "kind": "command", "span_id": "c4", "status": "failed env-tooling", "ts": "2026-01-10T09:05:00Z"}
+{"actor": "human", "duration_s": 60, "end": "2026-01-10T09:06:00Z", "kind": "wait", "span_id": "c5", "start": "2026-01-10T09:05:00Z", "status": "done", "ts": "2026-01-10T09:06:00Z"}
+{"kind": "command", "span_id": ["bad"], "status": "done"}
+{"kind": "command", "span_id": "bad-start", "start": "yesterday", "status": "done"}
+{"iteration": "two", "kind": "agent_call", "span_id": "bad-try", "status": "done"}
+{"duration_s": -5, "kind": "command", "span_id": "bad-duration", "status": "done"}
+["not", "an", "object"]
+{"kind": "command", "notes": 7, "span_id": "bad-notes", "status": "done"}

@@ -1,0 +1,2 @@
+{"actor": "orchestrator", "feature": "beta", "kind": "feature", "phase": "intake", "project": "demo", "span_id": "f1", "start": "2026-01-10T10:00:00Z", "status": "running", "ts": "2026-01-10T10:00:00Z", "v": 1}
+{"actor": "maker", "call": "N1.maker.2", "feature": "beta", "iteration": 2, "kind": "agent_call", "model": "opus-5-5", "node": "N1", "node_label": "Greeting flag", "output_ref": "messages/a1.out.md", "phase": "build", "project": "demo", "span_id": "a1", "start": "2026-01-10T10:00:00Z", "status": "running", "ts": "2026-01-10T10:00:00Z", "v": 1}

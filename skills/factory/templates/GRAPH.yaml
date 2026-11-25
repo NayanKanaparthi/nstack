@@ -1,0 +1,28 @@
+# GRAPH: <build id>
+# Format: one entry per piece. Every path has exactly one owner.
+# Test files are owned by the test writer and are read-only for makers once locked.
+
+nodes:
+  - id: N0
+    name: Readiness gate
+    depends_on: []
+    owns_files:
+      - path/to/test-runner
+    exposes: "one command that runs every existing test; exit 0 when all pass"
+    tests: [T-RDY-01]
+    goal: [AC1]
+    spec: [3]
+
+  - id: N1
+    name: First piece
+    depends_on: [N0]
+    owns_files:
+      - src/first.py
+    exposes: "function(args) -> result"
+    tests: [T-FIRST-01, T-FIRST-02]
+    goal: [AC2]
+    spec: [3]
+    reads: [tests/test_first.py]
+    note: "Its test reads only its own files and the files of the pieces it depends on."
+
+integration_node: INT

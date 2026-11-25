@@ -1,0 +1,6 @@
+{"kind": "command", "span_id": ["bad"], "status": "done"}
+{"kind": "command", "span_id": "bad-start", "start": "yesterday", "status": "done"}
+{"iteration": "two", "kind": "agent_call", "span_id": "bad-try", "status": "done"}
+{"duration_s": -5, "kind": "command", "span_id": "bad-duration", "status": "done"}
+["not", "an", "object"]
+{"kind": "command", "notes": 7, "span_id": "bad-notes", "status": "done"}
