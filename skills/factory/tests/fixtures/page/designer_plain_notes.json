@@ -1,0 +1,396 @@
+{
+ "notes": {
+  "s003": {
+   "lab": "Plan, version 1",
+   "p": "Wrote the first plan: 9 pieces of work plus a final assembly step, 30 requirements (25 of them must-haves), and 122 tests to write."
+  },
+  "s006": {
+   "p": "The reviewer found 2 serious problems in the plan and 6 smaller ones. It scored the plan 5 out of 10 on its checklist. The serious problems: the privacy scan could not pass on text that was already public, and some pieces listed the wrong pieces they depend on."
+  },
+  "s007": {
+   "lab": "Plan, version 2",
+   "p": "Fixed all 8 problems the reviewer raised. It also dropped one risky idea entirely and added two new checks. The plan now has 27 must-have requirements and 146 tests."
+  },
+  "s008": {
+   "p": "Six of the earlier problems are fixed and two only partly. The reviewer found 2 new serious problems: an earlier build had no start and stop times recorded, and the quick test run could not finish in under a minute because of fixed waits. It also listed 4 smaller ones."
+  },
+  "s009": {
+   "lab": "Plan, version 3",
+   "p": "Closed all 8 remaining problems. The plan now has 27 must-have requirements and 100 tests, and a release step was added."
+  },
+  "s012": {
+   "p": "No serious problems are left. Two earlier points were still partly open, and the reviewer listed 6 smaller ones about how data is stored and how existing files get changed."
+  },
+  "s014": {
+   "lab": "Plan, version 4 (final)",
+   "p": "The plan is final. All review points are closed, with 27 must-have requirements and 101 tests. A separate independent review of the public copy was added as its own step."
+  },
+  "s013": {
+   "p": "Built the safety net: 8 quick tests that pass on the original, untouched code in about 3 seconds. Every later change is measured against them. It also left notes about weak spots for later pieces."
+  },
+  "s02A": {
+   "lab": "Writer 1 of 2",
+   "p": "Stopped early because GPT hit its daily usage limit around 9:07 am. The two writers had covered 68 of the 101 tests between them. The same limit stopped this work yesterday too.",
+   "th": "Backup writers took over."
+  },
+  "s02B": {
+   "lab": "Writer 2 of 2",
+   "p": "Stopped early for the same reason: GPT hit its daily usage limit around 9:07 am, with 68 of the 101 tests covered across both writers.",
+   "th": "Backup writers took over."
+  },
+  "s030": {
+   "lab": "Backup writer",
+   "p": "Stopped on purpose. This backup writer (Claude) ran into its own weekly usage limit around 9:15 am and could not go on. The coordinator closed it at 3:10 pm after another writer finished the job.",
+   "th": "A GPT writer finished the tests."
+  },
+  "s045": {
+   "lab": "Replacement writer",
+   "p": "Finished the tests. All 82 tests that run as code are written, plus 9 browser checks written as scripts. A few tests can only be judged by looking at evidence, so those were left for people to check."
+  },
+  "s040": {
+   "p": "Stopped on purpose. The builder died when Claude's weekly usage limit ran out around 9:15 am, and it had written nothing. A fresh builder started the piece again.",
+   "th": "A new builder started over."
+  },
+  "s044": {
+   "p": "23 of 24 tests passed. The one failure was a mistake in the test itself (it compared 6:02 pm with 10:02 am), which the coordinator confirmed. The whole test run takes 21 seconds."
+  },
+  "s055": {
+   "p": "The checker asked for 6 fixes, though all 24 tests passed. Examples: a folder path written into the code, no warning when a message might contain a secret, and a crash when input is closed."
+  },
+  "s058": {
+   "p": "Made all 6 fixes plus three small suggestions."
+  },
+  "s060": {
+   "p": "The 6 fixes held and nothing else broke. The checker asked for one more thing: the help text for the log command must list its options."
+  },
+  "s065": {
+   "p": "Added the options to the help text, and a missing detail for one kind of logged event."
+  },
+  "s068": {
+   "p": "The checker sent it back with 3 more fixes. It did not write down the details."
+  },
+  "s072": {
+   "p": "Made the 3 fixes. One test still needed a warning when a step is logged with no open phase."
+  },
+  "s075": {
+   "p": "Added that warning. The remaining test passes now."
+  },
+  "s046": {
+   "p": "Wrote the instructions and templates. The matching test passes and the safety net stays green. It took 3 minutes."
+  },
+  "s047": {
+   "p": "The checker asked for 6 fixes: missing options for naming a run, a path that failed when built from the plan, one wrong sentence in the spec, two lists of vendors that did not match, a README claim that was not true, and an undefined home folder."
+  },
+  "s048": {
+   "p": "Made all 6 fixes plus the suggestions."
+  },
+  "s049": {
+   "p": "The 6 earlier fixes held. The checker found 3 new things: one way of passing the build name, an example that left the board half empty, and a clash between the optional local model and the roles."
+  },
+  "s050": {
+   "p": "Fixed all 3."
+  },
+  "s052": {
+   "p": "A short re-check of only the 3 changes. No further fixes were asked."
+  },
+  "s057": {
+   "p": "11 of 13 tests passed. The 2 that failed need the page piece, which did not exist yet. They pass when a stand-in is used."
+  },
+  "s061": {
+   "p": "All 13 tests pass, but the checker asked for 6 fixes in the privacy scan: some changed lines were not scanned, files staged for sharing were skipped, the export scanned files it never copied, the compile check used the wrong Python, a pattern file crashed the scan, and a few allow-list lines were wrong."
+  },
+  "s067": {
+   "p": "Worked through the checker's 6 fixes. The builder did not leave a note."
+  },
+  "s077": {
+   "p": "5 of the 6 fixes held. New: a file name starting with a colon slipped past the privacy scan, and one deploy test sometimes fails when the computer is busy."
+  },
+  "s080": {
+   "p": "Worked through the new findings. The builder did not leave a note."
+  },
+  "s112": {
+   "p": "Made another round of changes. The builder did not leave a note."
+  },
+  "s096": {
+   "p": "Wrote the public-copy checklist (55 lines), a row in the README and an entry in the changelog. Packaging the copy for sharing is still to do."
+  },
+  "s06N3": {
+   "p": "Stopped on purpose. The coordinator stopped this builder because its test of the notification feature popped up real alerts on \u004eayan's Mac. The code it had written was kept.",
+   "th": "A new builder started over."
+  },
+  "s064N3": {
+   "p": "All 6 start-of-build tests pass. The builder also found an older test that still used the real check by mistake."
+  },
+  "s070": {
+   "p": "All 6 tests pass, but the checker asked for 4 fixes: one setting missing from the machine-readable output, settings warnings that were never shown, an unfriendly error for a bad limit setting, and the word 'Ready' shown when nothing had been checked."
+  },
+  "s079": {
+   "p": "Made the 4 fixes. The builder did not leave a note."
+  },
+  "s081": {
+   "p": "The second review left no note. The next attempt was triggered by a clock problem that the end-to-end test found."
+  },
+  "s088": {
+   "p": "Fixed the clock the start-of-build check used. The end-to-end test now correctly stops a build that has gone quiet (0 versus 360 seconds)."
+  },
+  "s06N4": {
+   "p": "All 8 report tests pass. It left two notes for the pieces built next: how the program reads its command line, and that it works on a private copy of one step."
+  },
+  "s063": {
+   "p": "All 8 tests pass and the checker confirmed the numbers by hand against the log. It still asked for 5 fixes, all about how things are shown and rare cases."
+  },
+  "s073": {
+   "p": "Made the 5 required fixes plus 3 suggestions."
+  },
+  "s074": {
+   "p": "The second review left no note."
+  },
+  "s090": {
+   "p": "The end-to-end test passes now, and the 8 report tests still pass."
+  },
+  "s06N5": {
+   "p": "All 5 page tests pass. The browser tests could not run because the browser tool was not installed. A manual check for unsafe page content found no problem."
+  },
+  "s066": {
+   "p": "Stopped on purpose. The checker's browser tool kept opening visible Chrome windows on \u004eayan's screen, so the coordinator ended it.",
+   "th": "A new checker started."
+  },
+  "s076": {
+   "p": "All 5 page tests pass. The checker expects two clashes with the browser tests (repeated text and a status shown in the build picker), plus a build name that carries a stray line break. One browser test needs a faster retry or a fix of its own."
+  },
+  "s083": {
+   "p": "Made the fixes. The builder did not leave a note."
+  },
+  "s084": {
+   "p": "The product code is fine. One browser test has a mistake of its own: it waits 10 seconds while the page also refreshes every 10 seconds, and it reports errors when a request is refused. That is fixed during assembly."
+  },
+  "s06N2": {
+   "p": "Stopped on purpose. Its test runs sent real Mac pop-ups to \u004eayan, because the notification default was not switched off. The code it had written was kept.",
+   "th": "A new builder started over."
+  },
+  "s064N2": {
+   "p": "16 of 18 tests passed. One test was itself wrong (fixed later), and one needs a feature from the step recorder piece."
+  },
+  "s078": {
+   "p": "The checker asked for 6 fixes. A secret split across two reads could slip through, an expected-output file was not redacted, a help text was missing, a command could be guessed, some failures were silent, and old-format lines broke the check. It also found why some timing tests failed: stale cached code."
+  },
+  "s087": {
+   "p": "Made 6 changes. Some could only be done partly, because the tests require lines without values to still be counted. The quick test run passes in about 32 seconds."
+  },
+  "s092": {
+   "p": "5 of the 6 fixes held. A secret written as key=value could be cut in half when a very long line was split. Also, 2 of 5 quick tests failed because their time limits were very tight (0.3 seconds)."
+  },
+  "s094": {
+   "p": "Made another round of fixes. The builder did not leave a note."
+  },
+  "s095": {
+   "p": "The earlier leak is fixed (3,000+ cases clean), but three other ways a secret could reach disk remain. Output with no spaces was also very slow."
+  },
+  "s100": {
+   "p": "A stronger builder (Opus) tried: 5,173 unit cases and 68 end-to-end cases showed no leaks, 18 of 18 tests pass, and a 50 MB output takes 4.4 seconds."
+  },
+  "s104": {
+   "p": "The earlier failures are fixed and the output is intact. Two narrower leaks remain: the leftover tail of a dropped token could hide the next secret, and the scanner lost its place between reads."
+  },
+  "s106": {
+   "p": "Fixed both leaks within the time limit. The checker's own test set and the builder's own test set were both clean. A 50 MB output takes 4.4 seconds."
+  },
+  "s108": {
+   "p": "The checker's test set came back clean, but a randomized stress test still found 3 new rare leaks (4 in 36,000 cases). This is why the owner asked for a simpler redesign of how output is captured."
+  },
+  "s111": {
+   "p": "Made another round of changes. The builder did not leave a note."
+  },
+  "s085": {
+   "lab": "Privacy clean-up",
+   "p": "Cleaned up wording in the source so the public-copy privacy scan passes. The tests were only touched mechanically, and only after the coordinator reviewed them."
+  },
+  "s091": {
+   "lab": "Browser test run 1",
+   "p": "All 9 browser tests failed, but every failure was a mistake in the test scripts, not in the product. Examples: the menu text did not match once an icon was added, the tests did not wait for the first load, and two tests used different clocks."
+  },
+  "s098": {
+   "lab": "Browser test run 2",
+   "p": "All 9 browser tests pass, twice in a row, without showing a browser window. Screenshots were saved as evidence."
+  },
+  "s109": {
+   "lab": "Final review",
+   "p": "Verdict: fix first. It found one serious problem (a runner that keeps files could run in a private folder) and four medium ones: a scan that prints 2 characters, an export that follows shortcuts, a second notification limit being overridden, and incomplete evidence.",
+   "th": "The fixes were made and tested."
+  },
+  "s103": {
+   "lab": "Independent review",
+   "p": "Did not finish. The independent reviewer produced nothing for 2 hours because its tool got stuck on sign-in errors, so it was stopped at 5:34 pm. It will be run again on the final copy tomorrow.",
+   "th": "Rerun planned on the final copy."
+  }
+ },
+ "pieces": {
+  "plan": [
+   "Write the plan",
+   "Decide what to build and break it into pieces."
+  ],
+  "plan-review": [
+   "Second opinion on the plan",
+   "A second AI company reads the plan and looks for mistakes before building starts."
+  ],
+  "N0": [
+   "Safety net",
+   "Quick tests that must keep passing, so we notice if anything breaks."
+  ],
+  "TW": [
+   "Write the tests first",
+   "Write what 'done' looks like before anything is built."
+  ],
+  "N1": [
+   "Step recorder",
+   "Writes down every step of a build so it can be shown later."
+  ],
+  "N6": [
+   "Instructions and templates",
+   "The written instructions people use to run the factory."
+  ],
+  "N7a": [
+   "Setup and privacy scripts",
+   "Install the factory on a computer and make sure nothing private gets shared."
+  ],
+  "N2": [
+   "Automatic recording",
+   "Makes the recorder work by itself so nobody has to remember."
+  ],
+  "N3": [
+   "Start-of-build check",
+   "Catches setup problems before a build begins."
+  ],
+  "N4": [
+   "Report card",
+   "Turns the record into a short report for each build."
+  ],
+  "N5": [
+   "Factory page",
+   "The page you are looking at."
+  ],
+  "INT": [
+   "Put it all together",
+   "Join the pieces and test the whole thing the way a person would use it."
+  ],
+  "N7b": [
+   "Public copy",
+   "Prepare the version that is shared publicly."
+  ],
+  "PR-REV": [
+   "Independent review",
+   "A fresh reviewer who has not seen the work reads the public copy."
+  ],
+  "REL": [
+   "Release",
+   "A last review, then your decision on whether to release."
+  ]
+ },
+ "stages": [
+  {
+   "t": "Plan and groundwork",
+   "d": "Decide what to build, get a second opinion, and set up a safety net.",
+   "ids": [
+    "plan",
+    "plan-review",
+    "N0"
+   ]
+  },
+  {
+   "t": "Tests first",
+   "d": "Write what 'done' looks like before building anything.",
+   "ids": [
+    "TW"
+   ]
+  },
+  {
+   "t": "Foundations",
+   "d": "Three pieces that the rest depends on, built side by side.",
+   "ids": [
+    "N1",
+    "N6",
+    "N7a"
+   ]
+  },
+  {
+   "t": "Four features",
+   "d": "The main features, built side by side.",
+   "ids": [
+    "N2",
+    "N3",
+    "N4",
+    "N5"
+   ]
+  },
+  {
+   "t": "Assemble and publish",
+   "d": "Join the pieces together and prepare the public copy.",
+   "ids": [
+    "INT",
+    "N7b"
+   ]
+  },
+  {
+   "t": "Independent review",
+   "d": "A fresh reviewer checks the public copy.",
+   "ids": [
+    "PR-REV"
+   ]
+  },
+  {
+   "t": "Release",
+   "d": "A last review, then your decision.",
+   "ids": [
+    "REL"
+   ]
+  }
+ ],
+ "states": [
+  [
+   "Waiting",
+   "This piece cannot start yet because it needs other pieces to finish first."
+  ],
+  [
+   "Building",
+   "A builder is making this piece right now."
+  ],
+  [
+   "Checking",
+   "A different AI is reading the builder's work and looking for problems."
+  ],
+  [
+   "Sent back",
+   "The checker found problems. The builder will fix them in a new attempt."
+  ],
+  [
+   "Done",
+   "The checker is satisfied. Nothing more is needed on this piece."
+  ],
+  [
+   "Stopped",
+   "This attempt ended early, on purpose or because something ran out or got stuck. The note says which and what happens next."
+  ],
+  [
+   "Didn't finish (shown as 'failed' in technical details)",
+   "This attempt ended with a problem it could not fix by itself, such as hitting a usage limit. The note says why, and another attempt follows."
+  ],
+  [
+   "Waiting for you",
+   "A decision only you can make. It appears at the top of the page."
+  ],
+  [
+   "Attempt 2 of this piece",
+   "How many times a builder has taken a turn at this piece. A piece sent back gets a new attempt."
+  ]
+ ],
+ "recent": {
+  "Coordinator ran a command: finished": "The coordinator ran a routine command.",
+  "A decision is needed: GATE B": "A decision is needed from you: the release decision.",
+  "Public reviewer failed": "The independent reviewer did not finish.",
+  "Builder finished": "A builder finished an attempt.",
+  "Checker finished": "A checker finished a review.",
+  "Final reviewer finished": "The final reviewer finished.",
+  "Test writer was stopped": "A test writer was stopped.",
+  "Builder was stopped": "A builder was stopped."
+ }
+}

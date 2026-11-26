@@ -1,0 +1,50 @@
+# GRAPH: <build id>
+# Format: one entry per piece. Every path has exactly one owner.
+# Test files are owned by the test writer and are read-only for makers once locked.
+#
+# For a plan view (a dashboard that reads plan.json; none ships with this kit), every piece also gets two plain lines, and the graph ends with a
+# stages: block. Write them for someone who does not know the project:
+#   plain_name: what the piece is called, 40 characters at most, no ids or file names
+#   purpose:    one sentence, 160 characters at most, saying what the piece is for
+#   show: false hides a piece from the plan view (for example the orchestrator's own record)
+#   stages:     the plan in order. Pieces in one stage run side by side.
+#               Each stage has a name, a purpose and members: [A, B] on one line.
+# depends_on must be written on one line like [A, B]. A graph with no stages: block still works;
+# a plan view then shows a flat list of pieces.
+
+nodes:
+  - id: N0
+    name: Readiness gate
+    plain_name: Safety net
+    purpose: Quick tests that must keep passing, so we notice if anything breaks.
+    depends_on: []
+    owns_files:
+      - path/to/test-runner
+    exposes: "one command that runs every existing test; exit 0 when all pass"
+    tests: [T-RDY-01]
+    goal: [AC1]
+    spec: [3]
+
+  - id: N1
+    name: First piece
+    plain_name: First feature
+    purpose: Build the first thing the project does.
+    depends_on: [N0]
+    owns_files:
+      - src/first.py
+    exposes: "function(args) -> result"
+    tests: [T-FIRST-01, T-FIRST-02]
+    goal: [AC2]
+    spec: [3]
+    reads: [tests/test_first.py]
+    note: "Its test reads only its own files and the files of the pieces it depends on."
+
+stages:
+  - name: Groundwork
+    purpose: Set up the safety net that every later piece relies on.
+    members: [N0]
+  - name: Features
+    purpose: Build what the project does, once the safety net is in place.
+    members: [N1]
+
+integration_node: INT

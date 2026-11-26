@@ -1,0 +1,35 @@
+{
+  "project": "my-project",
+  "plan_dir": "build",
+  "tier_default": "B",
+  "tests": {
+    "fast": {"cmd": "python3 -m unittest -q", "timeout_s": 60}
+  },
+  "evals": {"metrics": [], "sets": []},
+  "release": {"preflight": [], "steps": [], "smoke": []},
+  "roles": {
+    "planner": {"runner": "claude", "model": "fable-5-2", "effort": "xhigh"},
+    "plan-reviewer": {"runner": "codex", "model": "gpt-5.6-sol", "effort": "xhigh",
+                      "fallback": [{"runner": "ollama", "model": "qwen3:14b"},
+                                   {"runner": "claude", "model": "haiku-5-5"}]},
+    "test-writer": {"runner": "codex", "model": "gpt-5.6-sol",
+                    "fallback": [{"runner": "claude", "model": "haiku-5-5"}]},
+    "maker": {"runner": "claude", "model": "opus-5-5"},
+    "checker": {"runner": "claude", "model": "fable-5-2"},
+    "final-reviewer": {"runner": "codex", "model": "gpt-5.6-sol",
+                       "fallback": [{"runner": "claude", "model": "haiku-5-5"}]},
+    "summaries": {"runner": "ollama", "model": "qwen3:14b",
+                  "fallback": [{"runner": "claude", "model": "haiku-5-5"}]}
+  },
+  "vendors": {"required": ["claude", "codex", "opencode"], "optional": ["ollama", "cursor"]},
+  "runners": {
+    "opencode": {"retains_data": true, "private_safe_prefixes": ["ollama/"],
+                 "probe_model": "opencode/deepseek-v4.1-flash-free"},
+    "ollama": {"retains_data": false, "probe_model": "qwen3:4b"}
+  },
+  "plain_words_ok": [],
+  "public_roots": [],
+  "timers": {"wake_s": 480, "quiet_s": 600, "stale_s": 1800, "node_timebox_s": 2400,
+             "default_cmd_timeout_s": 1800, "kill_grace_s": 5, "notify_desktop_s": 10,
+             "notify_command_s": 20, "poll_s": 1, "restart_wait_s": 20}
+}
