@@ -260,7 +260,7 @@ def _graph_plan(path, skip, allowed):
         _fail(lib.EXIT.USAGE, "the graph file has problems:\n  - " + "\n  - ".join(problems),
               "graph file has problems")
     if plan is None:
-        print("factory: no stages block in the graph, so the page shows a flat list of pieces",
+        print("factory: no stages block in the graph, so the plan has no stages and a plan view shows a flat list of pieces",
               file=sys.stderr)
     return plan
 

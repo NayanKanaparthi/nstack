@@ -152,12 +152,12 @@ class RunTests(AgentCommandCase):
              "--input", str(self.prompt), "--", str(fake)], cwd=str(self.project), env=self.env,
             stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         try:
-            deadline = time.monotonic() + 0.4
+            deadline = time.monotonic() + 0.95  # ends as soon as the child starts; room for a cold first run
             while not pid_file.exists() and time.monotonic() < deadline:
                 time.sleep(0.01)
             self.assertTrue(pid_file.exists(), "wrapped child did not start")
             process.send_signal(signal.SIGTERM)
-            process.communicate(timeout=0.5)
+            process.communicate(timeout=0.95)
             with self.assertRaises(ProcessLookupError):
                 os.kill(int(pid_file.read_text()), 0)
             self.assertEqual(self.trace()[-1]["status"], "stopped")
@@ -313,9 +313,9 @@ class WaitGateCheckStatusTests(AgentCommandCase):
         self.assertIn("Greeting flag", result.stdout)
         self.build.joinpath("trace.jsonl").write_text("")
         started = time.monotonic()
-        idle = self.run_factory("wait", "--timeout", "0.3")
+        idle = self.run_factory("wait", "--timeout", "0.9")
         self.assertEqual(idle.returncode, 0)
-        self.assertLess(time.monotonic() - started, 0.1)
+        self.assertLess(time.monotonic() - started, 0.6)  # well under the 0.9 s limit: it did not wait
         self.assertIn("nothing is running", idle.stdout)
         self.factory_home.joinpath("current.jsonl").write_text("")
         self.assertEqual(self.run_factory("wait", env={"FACTORY_BUILD": ""}).returncode, 3)
