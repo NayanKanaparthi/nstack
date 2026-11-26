@@ -30,7 +30,7 @@ Two human gates. Between them nothing waits on the owner unless a breaker fires.
 | Role | Job | Rule |
 |---|---|---|
 | Orchestrator | Holds the graph, writes every message to other agents, keeps the log. | Writes no product code. |
-| Planner | Writes goals, spec, graph, rubric and test plan. | Highest effort setting. |
+| Planner | Writes goals, spec, graph, rubric (a checklist of pass or fail items, for example "R1: the export button writes a CSV file") and test plan. | Highest effort setting. |
 | Plan reviewer | Finds what is missing or wrong in the plan. | A different vendor than the maker. |
 | Test writer | Writes tests from the test plan before any code exists. | Fresh session. A different vendor than the maker. |
 | Maker | Builds one piece from a small packet. | Never sees the whole plan. |

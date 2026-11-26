@@ -57,7 +57,7 @@ Skill: factory. Version: 0.1.0.
 
 ## F. Tests
 
-37. Do all tests run with one command from the skill folder, `python3 -m unittest discover -s tests -t .`?
+37. Do all tests run with one command from the skill folder, `PYTHONPYCACHEPREFIX=/tmp/factory-test-cache python3 -m unittest discover -s tests -t .`?
 38. Does that command exit 0 on a clean copy of the folder?
 39. Do the tests never call a model or the network?
 40. Do the tests run in under 60 seconds in total?

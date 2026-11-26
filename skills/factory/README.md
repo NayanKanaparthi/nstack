@@ -21,10 +21,6 @@ Project specifics (tests, eval metrics, release steps, optional rules file) live
 
 `log end`, `log event`, `run` and `step` take `--plain` (a one to three sentence summary in plain words), `--stop-reason` (`on_purpose`, `usage_limit`, `stuck`, `error`), and `--next-step`; `run` also takes `--plain-file` and `--group`. `factory plain` writes summaries for steps that have none (`--dry-run`, `--limit`, `--timeout`, `--fallback-only`). `factory new --from-graph` writes `plan.json` from the graph's `stages:` block, and `--stop-plain "GATE B=Release decision"` names a deadline in plain words. `gate open --node <piece>` ties a question to a piece.
 
-## The Factory page
-
-The dashboard's Factory view answers, in order: does anything need me, where is the build, and what is the plan. It shows plain sentences from the log and the plan, folds finished work away, and keeps ids, raw notes and model names behind a technical details switch. Approval stays in the app; the page only reads.
-
 ## Evals
 
 An eval is a small quiz for your program: a list of inputs with the answer you expect, and a score for how many it got right. Evals are optional and only matter when the build changes what a program picks, ranks or says.
@@ -109,8 +105,8 @@ Numbers in this kit (3 plan review rounds, 5 questions per gate, a 480 second wa
 6. No dashboard is included. The board is `factory status`.
 7. Only secret-looking values (API keys, tokens, passwords) in a wrapped program's output are replaced before anything is shown or saved. Other personal data, such as an email address, is kept as the program printed it, in the saved output and in `factory status`. Do not wrap programs whose output holds personal data you would not want stored.
    A related limit: a single line longer than 1 MB with no line break is not saved at all: it is replaced by a short note saying how big it was, because it cannot be checked safely while it streams.
-8. Evals run one example at a time and are scored by a fixed formula only; no model does the scoring. The improve loop is small: see its list of what is left out. Improve-loop privacy limit: the kit never hands example text to the research agent, but that agent has file tools and may search the web, and keeping it out of your eval files is an instruction in its prompt that the kit cannot enforce. If your eval inputs must never leave this machine, do not run the improve loop.
+8. Evals run one example at a time and are scored by a fixed formula only; no model does the scoring. The improve loop is small: it changes project code only, one change per round, and keeps a change only if the tests and evals still pass. Improve-loop privacy limit: the kit never hands example text to the research agent, but that agent has file tools and may search the web, and keeping it out of your eval files is an instruction in its prompt that the kit cannot enforce. If your eval inputs must never leave this machine, do not run the improve loop.
 
 ## Tests
 
-Run from the kit folder: `python3 -m compileall -q scripts && python3 -m unittest discover -s tests -t .` (compiling the scripts first keeps the timing tests fair; the whole run takes about a minute; the tests use synthetic fixtures and fake agent programs, and never call a model or the network).
+Run from the kit folder: `PYTHONPYCACHEPREFIX=/tmp/factory-test-cache python3 -m unittest discover -s tests -t .` (the setting keeps Python's compiled files in one temporary folder, so the many small test programs do not each recompile the kit; without it the run takes about twice as long and one timing test can fail; with it the run took about 40 seconds on the author's Mac; the tests use synthetic fixtures and fake agent programs, and never call a model or the network).

@@ -20,7 +20,7 @@ Full process detail is in `PROCESS.md`. Templates are in `templates/`.
 Once per project, in the project folder:
 
 - `factory init` writes `factory.json` (safe to commit). Add `--project NAME` if the folder name has spaces.
-- Fill in `factory.json`: tests, eval metrics, release steps, optional constitution path. Every command entry needs its own `timeout_s`.
+- Fill in `factory.json`: tests, eval metrics, release steps, optional constitution path (a constitution is a short file of rules every feature must follow, for example "never delete user files"). Every command entry needs its own `timeout_s`.
 - Private things (notification command, connector, runner program paths) live only in the machine file `<Factory home folder>/config.json`, never in the project. Copy `machine.example.json` there once. The Factory home folder is `$FACTORY_HOME` if set, else `~/.factory`.
 - `tests.e2e` is not in the example. Fill it in before `factory step tests.e2e` can work (it exits 2 until then).
 
@@ -40,7 +40,7 @@ Move through phases with `factory phase <name>`: `intake`, `plan`, `plan-review`
 
 **Intake.** Write `INTAKE.md` from the template: what was asked, the tier (B for behavior, R for routing or content with metrics), the deadline. Log: `factory phase intake`. Stop when the request is clear. Ask the owner only what you cannot decide.
 
-**Plan.** Planner role writes `GOALS.md`, `SPEC.md`, `GRAPH.yaml`, `RUBRIC.md`, `TESTPLAN.md` from `templates/`. Every acceptance criterion maps to tests. Every piece owns files that no other piece owns. Stop when the plan files exist and each criterion has a test.
+**Plan.** Planner role writes `GOALS.md`, `SPEC.md`, `GRAPH.yaml`, `RUBRIC.md` (a checklist of pass or fail items, for example "R1: the export button writes a CSV file"), `TESTPLAN.md` from `templates/`. Every acceptance criterion maps to tests. Every piece owns files that no other piece owns. Stop when the plan files exist and each criterion has a test.
 
 **Plan review.** A reviewer from a different vendor than the maker reads the plan. Rounds continue while each round closes findings. Exit when the checklist in `PROCESS.md` is all yes and no blocker or major finding is open. Breaker: 3 rounds (we picked 3; it is a rule of thumb, not a measured value). What is still open then goes to the owner as a short list at the gate.
 
@@ -86,9 +86,9 @@ Project commands run through `factory step tests.fast`, `factory step evals.<met
 
 If you missed a call, record it later with `factory log event --kind agent_call --actor maker --call N1.maker.3 --input prompt.md --notes "added late"`. A call nobody planned is acknowledged with `factory check --add`. Log lines are never edited.
 
-## 4a. Plain summaries (what the Factory page shows)
+## 4a. Plain summaries (what status and the report show)
 
-The Factory page shows one plain summary per step, never the raw note. Close every agent call and command with it:
+Status and the report show one plain summary per step, never the raw note. Close every agent call and command with it:
 
 ```
 factory log end <span_id> --plain "Wrote the greeting words and 4 tests. A checker reads them next." [--stop-reason on_purpose|usage_limit|stuck|error] [--next-step "A new checker starts after the limit resets."]
@@ -115,7 +115,7 @@ factory gate open --name "GATE A" --question "Should the new flag be on by defau
 
 A plain question, a suggested answer, one sentence why. No ids, no section numbers, no jargon. At most 5 questions per gate (our pick, so one reply can answer them). The command refuses a question longer than 300 characters (also our pick) or one that contains ids like `AC3` or `T-KIT-01`.
 
-Notifications go only through configured channels (`notify.channels`). If `gate open` prints `Also send this through: <name>`, send it through that connector yourself, then record it with `factory gate sent <span_id> --channel connector`. Use a connector only when that line is printed. Inside the Conductor app the question may also go through its question tool. Neither that nor a connector is ever the only path: always run `factory gate open`. Never pick a chat, mail or scheduling connector on your own. Notify for decisions only: gates, a MUST criterion at risk, a breaker escalation, a constitution amendment. Routine progress never notifies.
+Notifications go only through configured channels (`notify.channels`). If `gate open` prints `Also send this through: <name>`, send it through that connector yourself, then record it with `factory gate sent <span_id> --channel connector`. Use a connector only when that line is printed. Inside the Conductor app (a separate Mac app some people use to run several agents side by side; the kit works without it) the question may also go through its question tool. Neither that nor a connector is ever the only path: always run `factory gate open`. Never pick a chat, mail or scheduling connector on your own. Notify for decisions only: gates, a MUST criterion at risk, a breaker escalation, a constitution amendment. Routine progress never notifies.
 
 ## 6. Hard rules
 
