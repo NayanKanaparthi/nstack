@@ -8,6 +8,7 @@ Every release of nstack gets an entry here. Each skill and plugin also keeps its
 - Repo setup: README, MIT license, `setup` script, Claude Code marketplace files (`.claude-plugin/`), CLAUDE.md, AGENTS.md, CONTRIBUTING.md, docs/, notes/, issue templates and a check workflow.
 - Skills: agent-memory-design 0.2.0 (0.1.0 was the first version), ai-pricing-strategy, evidence-check, venture-assessor.
 - Plugins: discover 2.3.0, smoke-test 0.2.2.
+- Skills: factory 0.1.0. A build process for coding agents with two approval gates, a maker and a separate checker for each piece, one log and a computed report card. Python 3.9, standard library only.
 - Marketplace entry `agent-memory-design`, to install that one skill on its own.
 
 ### Changed

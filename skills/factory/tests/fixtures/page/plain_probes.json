@@ -1,0 +1,463 @@
+{
+ "pass": [
+  "The builder finished the greeting words. A checker will read them next.",
+  "Stopped early because the AI company's daily usage limit was reached. The builder will try again after the limit resets.",
+  "68 of the 101 tests pass, so the piece is not done yet.",
+  "The checker approved the plan after 2 rounds of fixes.",
+  "The release decision is open. The coordinator will go ahead after you answer at 5:30 pm.",
+  "The builder did not leave a note.",
+  "All 24 tests passed.",
+  "The piece stopped on purpose, so the builder can restart it.",
+  "Ran 3 of 3 checks.",
+  "Building: 1 of 4 pieces done, 1 being checked, 1 being built.",
+  "This step finished. Its original note is too technical to show here; turn on technical details to read it.",
+  "This step ended early. The reason was not written down in plain words; turn on technical details to see the original note.",
+  "The release decision waits on you.",
+  "You answered this decision, and the build carried on.",
+  "The builder ended early because it ran past its time limit of 1 second. The coordinator decides what happens next.",
+  "The builder ended early because its program could not be started. The coordinator decides what happens next.",
+  "The builder ended early because the program reported an error. The coordinator reads its output next.",
+  "The builder was cut off before it finished, because it received a stop signal.",
+  "A project command ran and finished.",
+  "A summary writer rewrote one note.",
+  "No plain summary has been written for this step yet.",
+  "Finished. All 4 pieces are done.",
+  "3 of 4 pieces are done. 1 piece ended early, so it needs another attempt. The release decision waits on you.",
+  "Building: 1 of 4 pieces done, 2 ended early, none running right now.",
+  "Nothing has started yet.",
+  "Next: Release decision at 12:30 pm, in 3 h 12 min.",
+  "No deadline is set.",
+  "All deadlines have passed.",
+  "No deadlines left.",
+  "This build is finished. Nothing is left to decide.",
+  "The build is moving on its own. A question will appear here the moment it needs you.",
+  "Nothing needs you right now, but nothing is running either. The last activity was at 9:40 am.",
+  "No activity has been logged yet.",
+  "The builder is working on it for the first time.",
+  "The builder is making the fixes the checker asked for.",
+  "The builder is trying again.",
+  "The checker is reviewing the builder's work.",
+  "A reviewer is reading it now.",
+  "The builder finished. A checker reviews it next.",
+  "The checker asked for fixes. The builder picks it up next.",
+  "This attempt ended early. The reason was not written down.",
+  "This waits on your decision. Answer at the top of this page.",
+  "A checker reviewed it.",
+  "Another attempt followed.",
+  "Sent back to the builder for fixes.",
+  "Approved. This piece is finished.",
+  "This piece is finished.",
+  "Another attempt follows.",
+  "Next: a checker reviews it.",
+  "Next: sent back for fixes, or approved.",
+  "A checker reviews it next.",
+  "The builder fixes these next.",
+  "A builder started Shout option.",
+  "A builder finished an attempt on Greeting words.",
+  "A checker approved Greeting words.",
+  "A checker sent Shout option back for fixes.",
+  "A checker did not finish Quiet option because it ran out of usage.",
+  "A builder did not finish a piece because the reason was not written down.",
+  "The coordinator ran a routine command.",
+  "A routine command ended early because the program reported an error.",
+  "A decision is needed from you: release decision.",
+  "You answered the release decision.",
+  "The build moved on to: building.",
+  "The builder did not leave a note.",
+  "Nobody has started on this piece yet.",
+  "It starts after: Shout option, Quiet option.",
+  "Work in the log that the plan does not list.",
+  "The pieces found in the log, in the order they started.",
+  "The plan has no description for this piece.",
+  "The plan file could not be read, so the pieces come from the log.",
+  "No new output for 12 minutes.",
+  "Select any piece to see what each attempt did and why.",
+  "Pieces run top to bottom. Pieces in the same row run side by side. Each piece is built by one AI and checked by another.",
+  "The checker stopped because its daily usage limit ran out. A new checker starts after the limit resets.",
+  "The builder was stopped on purpose so the work could be split in two.",
+  "The checker asked for 2 fixes: the option ignores capital letters and the help text is missing.",
+  "Yes, release it now. Both options passed their checks.",
+  "Do you want the toy program released now?",
+  "Choose the words the program says hello with.",
+  "Run the whole program the way a person would.",
+  "The builder added a sign-in page and/or a sign-up page.",
+  "The USA flag was added.",
+  "I fixed it.",
+  "The tests ran in 1.5 seconds.",
+  "It costs $0.20 per run.",
+  "The builder stopped. It will try again tomorrow.",
+  "Two tests failed. The builder fixes them next.",
+  "The page did not load, so the checker stopped.",
+  "Nothing failed.",
+  "No tests failed.",
+  "The checker found 2 problems and fixed both.",
+  "The builder read the US tax rules.",
+  "We met the 5 pm deadline.",
+  "The work is 80% done.",
+  "3 pieces are done and 1 is left.",
+  "The builder wrote 12 tests and all passed.",
+  "The first 2 checks finished.",
+  "Version 2 of the plan is ready.",
+  "Mac and iPhone layouts both work.",
+  "The builder added a to-do list.",
+  "The app is up-to-date.",
+  "The plan was approved on Nov 25.",
+  "The builder made the well-known fix.",
+  "A 3D chart was added.",
+  "The team at The EU approved it.",
+  "The checker read the Q3 numbers.",
+  "Covers Wi-Fi errors.",
+  "The checker tested A4 paper sizes.",
+  "It supports MP3 files.",
+  "The TV app works.",
+  "Step 2 is done.",
+  "Two tests failed. The builder fixes them next.",
+  "No tests failed.",
+  "Nothing failed.",
+  "The builder stopped. It will try again tomorrow.",
+  "The checker found 2 problems and fixed both.",
+  "Step 2 is done.",
+  "3 pieces are done and 1 is left.",
+  "The first 2 checks finished.",
+  "Do you want the US release now?",
+  "The USA flag was added.",
+  "The TV app and the UK site work.",
+  "The EU approved it.",
+  "The checker tested A4 paper sizes.",
+  "It supports MP3 files.",
+  "The checker read the Q3 numbers.",
+  "The builder added a sign-in page and/or a sign-up page.",
+  "Either/or works here.",
+  "The iPhone layout works.",
+  "No new output for 12 minutes.",
+  "No new output for 15 minutes.",
+  "Your answer is needed: release decision.",
+  "A piece without a plain name",
+  "The builder was cut off, so the checker will start again.",
+  "It was built with a well-known, built-in tool.",
+  "3 of 7 pieces are done after 2 hours.",
+  "The test timed out after 5 minutes, so the builder will try again.",
+  "Round 3 is done.",
+  "The last 2 attempts finished.",
+  "Nothing crashed.",
+  "It never stopped.",
+  "Do you want to ship the app now?",
+  "The builder added a PDF download.",
+  "The FAQ page is new.",
+  "The CEO page has a new photo.",
+  "The NASA photo was added to the home page.",
+  "After 20 minutes the build finished.",
+  "In 10 minutes it is done.",
+  "The test failed twice. Should I keep going?",
+  "The builder stopped to ask you a question.",
+  "The build stopped at 3 pm. It waits for your answer.",
+  "The store is open 24/7 now.",
+  "The key was saved as [REDACTED]. A checker reads the notes next."
+ ],
+ "fail": [
+  "The checker ran n2 again.",
+  "t-ui-01 passes.",
+  "ac1 is met.",
+  "The n7a piece.",
+  "Sonnet5 did it.",
+  "gpt5 reviewed it.",
+  "ChatGPT reviewed it.",
+  "The fable5 checker passed it.",
+  "It crashed.",
+  "It did not work.",
+  "It timed out.",
+  "The build is broken.",
+  "The run broke.",
+  "It failed so badly.",
+  "Stopped, which happens.",
+  "It was killed, which is fine.",
+  "Fixed the bug in parseGraph.",
+  "factorylib was edited.",
+  "Ran pytest and got exit status 2.",
+  "Got a 404.",
+  "commit d9aeaea landed.",
+  "Tokenizer drift.",
+  "The spans were merged.",
+  "The maker hit ENOENT on the path.",
+  "The sonnet-5-5 run is done.",
+  "See the notes file notes.md.",
+  "Edited factory.py",
+  "GPT-5.6 reviewed it.",
+  "SIGKILL sent.",
+  "stdout was empty",
+  "HTTP error",
+  "Merged the PR.",
+  "The p95 was 3s.",
+  "Do you want the release of ID 4 now?",
+  "N2 maker try 3 done.",
+  "The review failed.",
+  "A builder stopped.",
+  "The checker found 24 tests passed.",
+  "PR-REV finished.",
+  "See s014.",
+  "Open README.",
+  "It used 12 MB.",
+  "Stopped.",
+  "Call N2.maker.5 ran.",
+  "Run factory plain --build now.",
+  "The node of the tree was trimmed.",
+  "The checker used a token of thanks.",
+  "It took a long iteration to settle.",
+  "The life span of the cache is one day."
+ ],
+ "label_pass": [
+  "Waiting",
+  "Building",
+  "Being checked",
+  "Sent back for fixes",
+  "Stopped",
+  "Done",
+  "Waiting for you",
+  "Attempt 2 of this piece",
+  "Review 1",
+  "Attempt 1",
+  "Attempt, ended early",
+  "Review, ended early",
+  "Built",
+  "Sent back",
+  "Building now",
+  "Checking now",
+  "Did not finish",
+  "Approved",
+  "Fixed",
+  "In progress",
+  "Finished",
+  "Stopped on purpose",
+  "Didn't finish",
+  "working now",
+  "finished this attempt",
+  "fixes it next",
+  "reviewing now",
+  "reviews next",
+  "asked for fixes",
+  "1 attempt · 15 min",
+  "2 attempts · 1 h 4 min",
+  "1 piece done · Show",
+  "3 pieces done · Show",
+  "Piece name not recorded",
+  "A piece without a plain name",
+  "Needs you · Release decision",
+  "Reply in the Conductor chat",
+  "Suggested answer",
+  "Groundwork",
+  "Two options",
+  "Builder",
+  "Checker",
+  "Independent reviewer",
+  "Summary writer",
+  "Needs you",
+  "Working",
+  "Quiet"
+ ],
+ "label_fail": [
+  "B1",
+  "Sonnet 5.5",
+  "T-UI-01",
+  "s014",
+  "Attempt (stopped) N2",
+  "gpt-5",
+  "README",
+  "a_b_c",
+  "68/101",
+  "Fast \u2014 slow",
+  "spans"
+ ],
+ "exact": [
+  [
+   "N2 maker try 3 done.",
+   [
+    "It contains \"N2\", which looks like an id.",
+    "It gives a count without the whole (\"3 done\")."
+   ]
+  ],
+  [
+   "Stopped.",
+   [
+    "It says \"Stopped\" without saying why."
+   ]
+  ],
+  [
+   "The test run reached 68/101.",
+   [
+    "It writes a number as a fraction (\"68/101\")."
+   ]
+  ],
+  [
+   "Sonnet rewrote the notes.",
+   [
+    "It names a model or tool (\"Sonnet\")."
+   ]
+  ],
+  [
+   "The worker used v2 of the plan.",
+   [
+    "It contains a version number (\"v2\")."
+   ]
+  ],
+  [
+   "It was fast \u2014 very fast.",
+   [
+    "It uses a dash as punctuation."
+   ]
+  ],
+  [
+   "The checker found 24 tests passed.",
+   [
+    "It gives a count without the whole (\"24 tests passed\")."
+   ]
+  ],
+  [
+   "The review failed.",
+   [
+    "It says \"failed\" without saying why."
+   ]
+  ],
+  [
+   "",
+   [
+    "It is empty."
+   ]
+  ],
+  [
+   "   ",
+   [
+    "It is empty."
+   ]
+  ],
+  [
+   "One. Two. Three. Four.",
+   [
+    "It is longer than three sentences or 400 characters."
+   ]
+  ],
+  [
+   "A builder stopped.",
+   [
+    "It says \"stopped\" without saying why."
+   ]
+  ],
+  [
+   "word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word.",
+   [
+    "Its first sentence is longer than 200 characters."
+   ]
+  ],
+  [
+   "It failed so badly.",
+   [
+    "It says \"failed\" without saying why."
+   ]
+  ],
+  [
+   "The n7a piece.",
+   [
+    "It contains \"n7a\", which looks like an id."
+   ]
+  ],
+  [
+   "Fixed the bug in parseGraph.",
+   [
+    "It contains code or a file name (\"parseGraph\")."
+   ]
+  ],
+  [
+   "Got a 404.",
+   [
+    "It contains code or a file name (\"404\")."
+   ]
+  ],
+  [
+   "Sonnet5 did it.",
+   [
+    "It names a model or tool (\"Sonnet5\")."
+   ]
+  ],
+  [
+   "Tokenizer drift.",
+   [
+    "It uses a word the owner does not know (\"Tokenizer\")."
+   ]
+  ]
+ ],
+ "known_gaps": [
+  "Try 3 of N 2 done.",
+  "The Api call returned 500.",
+  "The Json was bad.",
+  "Rc 124.",
+  "exit 3",
+  "Used grep and sed.",
+  "A null pointer was hit.",
+  "Ran on port 4242.",
+  "Merged the pull request.",
+  "Rebased the branch onto main.",
+  "The diff is clean.",
+  "Refactored the parser.",
+  "The stack trace shows a null pointer.",
+  "The cron job ran.",
+  "The api key expired.",
+  "Fixed the css.",
+  "Deployed to prod.",
+  "The env var was missing.",
+  "Ran npm install.",
+  "The endpoint returns json.",
+  "The worktree is dirty.",
+  "The linter complains.",
+  "The pr was merged.",
+  "Sha mismatch.",
+  "The mutex deadlocked.",
+  "The webhook fired.",
+  "The payload was malformed.",
+  "Uses kwargs now.",
+  "The localhost server is up.",
+  "The subagent returned.",
+  "The maker handed off to the checker.",
+  "Gate B is open.",
+  "The harness passed.",
+  "The orchestrator respawned the worker.",
+  "The dag has four leaves.",
+  "The prompt was too long for the context window.",
+  "Gemini reviewed it.",
+  "Grok checked the work.",
+  "Cursor wrote the patch.",
+  "OpenAI did the review.",
+  "The Anthropic model wrote it.",
+  "Kimi reviewed it.",
+  "The Mythos reviewer approved.",
+  "The maker loop is at pass 3."
+ ],
+ "known_gaps_note": "Listed, NOT asserted. Some pass the check today, some do not; the check is a floor and does not chase everyday engineering words. T-PG-01 must not assert pass or fail for these. A real miss found later may be moved into pass/fail.",
+ "allowed_words": [
+  "A\u0049GIS",
+  "JAS",
+  "Codex"
+ ],
+ "pass_with_allowed": [
+  "Do you want to ship A\u0049GIS now?",
+  "The JAS site has a new home page.",
+  "The builder is building Codex for you."
+ ],
+ "fail_without_allowed": [
+  "Do you want to ship A\u0049GIS now?",
+  "The JAS site has a new home page."
+ ],
+ "fail_with_allowed": [
+  "Sonnet5 did it.",
+  "Open README.",
+  "N2 maker try 3 done."
+ ],
+ "secret_cases": [
+  [
+   "Used the key 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b here.",
+   ""
+  ],
+  [
+   "Wrote ghp_\u0061bcdefghijklmnopqrstuvwxyz0123456789 into the notes.",
+   ""
+  ]
+ ]
+}

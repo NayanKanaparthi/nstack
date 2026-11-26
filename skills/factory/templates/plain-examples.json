@@ -1,0 +1,34 @@
+[
+  {
+    "raw": "wrote greet.py + 4 tests; 4/4 pass; PR-REV pending",
+    "plain": "Wrote the greeting words and 4 tests for them. All 4 tests passed. A checker reads the work next."
+  },
+  {
+    "raw": "r1 rejected: AC2 fail, 2 majors (missing --help, caps ignored)",
+    "plain": "The checker sent the piece back with 2 serious problems: the help text is missing and capital letters are ignored. The builder fixes these next."
+  },
+  {
+    "raw": "rc=124 timeout after 1800s, no output",
+    "plain": "The builder ended early because it ran past its time limit of 30 min and printed nothing. The coordinator decides what happens next."
+  },
+  {
+    "raw": "hit usage limit, resets 5pm",
+    "plain": "The checker stopped because it ran out of daily usage. A new checker starts after the limit resets at 5 pm."
+  },
+  {
+    "raw": "N3 done; 68/101 tests green",
+    "plain": "The builder finished the piece. 68 of the 101 tests pass, and the rest wait for later pieces."
+  },
+  {
+    "raw": "killed by SIGTERM (orchestrator)",
+    "plain": "The builder was stopped on purpose so the work could be split in two. A new builder starts next."
+  },
+  {
+    "raw": "approved; 0 findings",
+    "plain": "The checker approved the work and found no problems. This piece is finished."
+  },
+  {
+    "raw": "no changes needed, files identical",
+    "plain": "The builder looked at the piece and found nothing to change. A checker reads it next."
+  }
+]

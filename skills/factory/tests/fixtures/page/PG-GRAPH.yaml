@@ -1,0 +1,41 @@
+# Synthetic page-plan fixture for T-PG tests.
+nodes:
+  - id: Z0
+    name: Orchestrator record
+    show: false
+    depends_on: []
+    owns_files: []
+  - id: A1
+    name: Alpha module
+    plain_name: Greeting words
+    purpose: Choose the words the program says hello with.
+    depends_on: []
+    owns_files: [a.py]
+  - id: B1
+    name: Beta module
+    plain_name: Shout option
+    purpose: Make the program shout when asked.
+    depends_on: [A1, Z0]
+    owns_files: [b.py]
+  - id: B2
+    name: Gamma module
+    plain_name: Quiet option
+    purpose: Make the program speak quietly when asked.
+    depends_on: [A1]
+    owns_files: [c.py]
+  - id: C1
+    name: Final run
+    plain_name: Final check
+    purpose: Run the whole program the way a person would.
+    depends_on: [B1, B2]
+    owns_files: [d.py]
+stages:
+  - name: Groundwork
+    purpose: Set up the words the program uses.
+    members: [A1]
+  - name: Two options
+    purpose: Build the two options side by side.
+    members: [B1, B2]
+  - name: Final check
+    purpose: Run the whole program the way a person would.
+    members: [C1]

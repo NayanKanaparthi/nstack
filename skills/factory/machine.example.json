@@ -1,0 +1,15 @@
+{
+  "roles": {
+    "planner": {"runner": "claude", "model": "fable-5-2", "effort": "xhigh"},
+    "maker": {"runner": "claude", "model": "opus-5-5"},
+    "checker": {"runner": "claude", "model": "fable-5-2"}
+  },
+  "runners": {
+    "claude": {"bin": null, "bin_glob": null},
+    "codex": {"bin": null, "bin_glob": null},
+    "opencode": {"bin": null, "bin_glob": null},
+    "cursor": {"bin": null, "bin_glob": null}
+  },
+  "notify": {"channels": ["desktop"], "command": null, "connector": null},
+  "private_patterns_file": null
+}

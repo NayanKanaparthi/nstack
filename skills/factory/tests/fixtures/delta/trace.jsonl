@@ -1,0 +1,9 @@
+{"actor": "orchestrator", "kind": "phase", "span_id": "s001", "status": "done", "ts": "2026-11-25T12:50:00Z"}
+{"actor": "orchestrator", "kind": "command", "span_id": "s002", "status": "done", "ts": "2026-11-25T12:51:00Z"}
+{"actor": "planner", "kind": "agent_call", "node": "PLAN", "span_id": "s003", "status": "running", "ts": "2026-11-25T12:52:15Z"}
+{"duration_s": 988, "span_id": "s003", "status": "done", "ts": "2026-11-25T13:08:43Z"}
+{"actor": "orchestrator", "kind": "command", "span_id": "s004", "status": "done warn", "ts": "2026-11-25T13:08:44Z"}
+{"actor": "orchestrator", "kind": "command", "span_id": "s005", "status": "done", "ts": "2026-11-25T13:08:50Z"}
+{"actor": "plan-reviewer", "iteration": 1, "kind": "agent_call", "node": "REVIEW", "span_id": "s006", "status": "running", "ts": "2026-11-25T13:08:34Z"}
+{"span_id": "s006", "status": "done", "ts": "2026-11-25T13:14:40Z"}
+{"actor": "planner", "iteration": 2, "kind": "agent_call", "node": "PLAN", "span_id": "s007", "status": "running", "ts": "2026-11-25T13:15:10Z"}
