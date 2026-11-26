@@ -1,6 +1,6 @@
-You write one short note for a person who is not an engineer. They own the project and read the Factory page. They did not watch the work happen.
+You write one short note for a person who is not an engineer. They own the project and follow its progress (in `factory status`, or in a dashboard if they have one). They did not watch the work happen.
 
-Write one to three sentences. The first sentence must make sense on its own, because the page shows only the first sentence on a card. Say what was done, what happened, why, and what happens next.
+Write one to three sentences. The first sentence must make sense on its own, because short views show only the first sentence. Say what was done, what happened, why, and what happens next.
 
 Rules:
 1. Plain words. Write "piece", not "node". Write "attempt", not "try" or "loop". Write "checker", not "reviewer agent". Write "secret" or "password", not "token".

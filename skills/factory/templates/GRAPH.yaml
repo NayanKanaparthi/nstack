@@ -2,15 +2,15 @@
 # Format: one entry per piece. Every path has exactly one owner.
 # Test files are owned by the test writer and are read-only for makers once locked.
 #
-# For the Factory page, every piece also gets two plain lines, and the graph ends with a
+# For a plan view (a dashboard that reads plan.json; none ships with this kit), every piece also gets two plain lines, and the graph ends with a
 # stages: block. Write them for someone who does not know the project:
 #   plain_name: what the piece is called, 40 characters at most, no ids or file names
 #   purpose:    one sentence, 160 characters at most, saying what the piece is for
-#   show: false hides a piece from the page (for example the orchestrator's own record)
+#   show: false hides a piece from the plan view (for example the orchestrator's own record)
 #   stages:     the plan in order. Pieces in one stage run side by side.
 #               Each stage has a name, a purpose and members: [A, B] on one line.
 # depends_on must be written on one line like [A, B]. A graph with no stages: block still works;
-# the page then shows a flat list of pieces.
+# a plan view then shows a flat list of pieces.
 
 nodes:
   - id: N0
