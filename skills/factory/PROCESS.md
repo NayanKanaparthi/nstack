@@ -29,14 +29,14 @@ Two human gates. Between them nothing waits on the owner unless a breaker fires.
 
 | Role | Job | Rule |
 |---|---|---|
-| Orchestrator | Holds the graph, writes every message to other agents, keeps the log. | Writes no product code. |
-| Planner | Writes goals, spec, graph, rubric (a checklist of pass or fail items, for example "R1: the export button writes a CSV file") and test plan. | Highest effort setting. |
-| Plan reviewer | Finds what is missing or wrong in the plan. | A different vendor than the maker. |
-| Test writer | Writes tests from the test plan before any code exists. | Fresh session. A different vendor than the maker. |
-| Maker | Builds one piece from a small packet. | Never sees the whole plan. |
-| Checker | Runs everything, judges each rubric item with evidence. | Never the same session as the maker. |
-| Stuck diagnosis | Looks at a piece when one rubric item fails twice. | A different vendor than the maker. |
-| Final reviewer | One pass over the full diff before GATE B. | A different vendor than the maker. |
+| Orchestrator | Holds the graph, writes every message to other agents, keeps the log. | Writes no product code. [on trust] |
+| Planner | Writes goals, spec, graph, rubric (a checklist of pass or fail items, for example "R1: the export button writes a CSV file") and test plan. | Strongest model available, medium effort. [on trust] |
+| Plan reviewer | Finds what is missing or wrong in the plan. | A different vendor than the maker. [on trust] |
+| Test writer | Writes tests from the test plan before any code exists. | Fresh session. A different vendor than the maker. [on trust] |
+| Maker | Builds one piece from a small packet. | Never sees the whole plan. [on trust] |
+| Checker | Runs everything, judges each rubric item with evidence. | Never the same session as the maker. [on trust] |
+| Stuck diagnosis | Looks at a piece when one rubric item fails twice. | A different vendor than the maker. [on trust] |
+| Final reviewer | One pass over the full diff before GATE B. | A different vendor than the maker. [on trust] |
 | Summaries | Mechanical work, log summaries. | A local model when the material is private. |
 
 Roles and models are settings, not part of the process. A project may add roles the kit has never heard of. They are probed, logged and shown like any other.
@@ -47,7 +47,7 @@ In the project, under `plan_dir` (default `build/<feature>/`): `INTAKE.md`, `GOA
 
 Outside the project, in the Factory home folder (`$FACTORY_HOME`, else `~/.factory`): the build log and messages. Logs are private. They are never copied into a public repo.
 
-Context discipline: a maker gets a node packet, not the plan. A packet holds its slice of the spec, its rubric items, its tests, the interfaces it must honor and the constitution.
+Context discipline: a maker gets a node packet, not the plan. [on trust] A packet holds its slice of the spec, its rubric items, its tests, the interfaces it must honor and the constitution.
 
 ## Goals
 
@@ -72,10 +72,10 @@ Step zero is the readiness gate: confirm the existing suites are green on untouc
 
 Then:
 1. Cases are designed at plan time in `TESTPLAN.md`: id, layer, input, expected result, which criterion it proves.
-2. A test writer from a different vendor writes them as code.
+2. A test writer from a different vendor writes them as code. [on trust]
 3. **Test-acceptance gate.** The existing suite is still green. Every new test fails for the expected reason (a failing assertion about missing behavior, not a syntax error, missing fixture or import crash). Each criterion maps to tests that encode it.
 4. Lock the test files by recording their commit and content hashes in `TESTLOCK`.
-5. Test files are read-only inputs for makers. The checker fails any piece whose diff touches a locked test. Only the test writer may change one, and only after the planner records a `test-wrong` decision.
+5. Test files are read-only inputs for makers. The checker fails any piece whose diff touches a locked test. Only the test writer may change one, and only after the planner records a `test-wrong` decision. [on trust]
 
 | Layer | What | Speed |
 |---|---|---|
@@ -125,7 +125,7 @@ Rounds continue while each round closes findings. **Breaker at 3 rounds.** We pi
 
 A piece loops until its goal is met.
 
-- The same rubric item fails twice: a second vendor diagnoses before the next try.
+- The same rubric item fails twice: a second vendor diagnoses before the next try. [on trust]
 - Two churn rounds in a row (a round where no new item passes): stop and re-plan the piece. The packet or the spec is the problem, not effort. Thrash is an item that flips from pass to fail.
 - Piece time box exceeded (`timers.node_timebox_s`): log it, then continue, split or escalate.
 - Absolute stop times (set with `factory new --stop`): feature freeze, integration start, GATE B, release start. If a piece threatens one, SHOULD criteria are cut and the cut is logged. Cutting or changing a MUST criterion after GATE A needs the owner. Without that approval the result is a release candidate, not a release.
@@ -138,11 +138,12 @@ Failure classes are a fixed list: `spec-ambiguity`, `test-wrong`, `impl-bug`, `e
 Every build writes one append-only log of spans: a feature holds phases, a phase holds pieces, a piece holds iterations, and an iteration holds agent calls, commands and waits. The code fills ids, times, durations and rubric deltas. You never type them.
 
 Rules:
-- The log is not memory. Raw log lines never go into a model prompt. Only the computed report may be shown to a model.
+- The log is not memory. Raw log lines never go into a model prompt. [on trust] Only the computed report may be shown to a model.
 - Code decides, the model suggests. Durations, loop counts and bottlenecks come from `factory trace-report`.
 - Append only. A span changes state by appending another line.
 - Secrets are removed before a line is written.
 - A person switches on process changes. Reports propose and change nothing.
+- Views read, never write. `factory status` and `factory dashboard` read the log and `plan.json` and change nothing.
 
 Wrapped calls log themselves (`factory run`, `factory step`). Everything else uses `factory log start` and `factory log end`. Because the second path depends on the orchestrator remembering, `factory check` compares the calls that were expected with the calls that were logged and reports anything missing, unplanned, duplicated or never finished. It runs before each gate and before the report card.
 
@@ -156,8 +157,9 @@ Every role handles private material. Whether a call may go to a model that keeps
 
 - Every agent is visible: either a named session in an app that shows sessions, or a row on `factory status`.
 - One board shows each piece, its phase, loop count, time spent, last verdict and what it waits on.
+- The dashboard (`factory dashboard`) is the same board in a browser, on this computer only: what needs you first, one plain sentence, the plan as stages, details per piece. It is read-only; approvals still happen in the conversation. Its words come from the plain summaries agents write when each call ends, so a missing summary shows on the page as a gap. Its refresh times, intro length and default port are the author's picks. It shows a small credit line with the author's name that links to the project repo, by the author's choice. Its tests run only on this computer (`127.0.0.1`), never on the internet or with a real model.
 - Notifications are for decisions only. Routine progress never notifies. Channels are the configured ones, nothing else.
-- Agents run without per-command approval inside their own worktree. Safety comes from isolation: own branch, nothing pushed, published or merged without GATE B.
+- Agents run without per-command approval inside their own worktree. Safety comes from isolation: own branch, nothing pushed, published or merged without GATE B. [on trust]
 - Every approval is logged as a wait on a person, so waiting is measured like any other bottleneck.
 
 ## Gates
@@ -174,8 +176,10 @@ Release candidate:
 3. Inspect package contents. Nothing private.
 4. Record the candidate commit in the log.
 
+Before GATE B, open `factory dashboard` once and check that what needs the owner and the plan read correctly.
+
 GATE B: the owner approves the candidate commit and the publish. After that: merge, tag, publish, then the smoke steps (`factory step release.smoke.<name>`). A broken publish gets a deprecation or yank plus a fixed patch release. Never overwrite a version.
 
 ## Retro
 
-Run `factory check`, then `factory trace-report` and `factory report-card`. They answer: which phase, piece or actor took longest; how many loops each piece needed and whether they made progress; how much time was spent waiting on a person; where nobody was working. Pick at most 3 process changes to propose, and change one process variable per build so the effect can be told apart.
+Run `factory check`, then `factory trace-report` and `factory report-card`. They answer: which phase, piece or actor took longest; how many loops each piece needed and whether they made progress; how much time was spent waiting on a person; where nobody was working. Pick at most 3 process changes to propose, and change one process variable per build so the effect can be told apart. Last step: run `factory finish`. [on trust]

@@ -37,6 +37,8 @@ COMMAND_HELP = (
     ("gate", "ask the owner a decision: open, close, sent"),
     ("check", "find agent calls that were missed or never finished"),
     ("status", "show the live board in the terminal"),
+    ("dashboard", "open the board in your browser (this computer only, read-only)"),
+    ("finish", "mark the build finished (refuses while work is open)"),
     ("preflight", "check that the machine is ready"),
     ("trace-report", "write the run's trace report"),
     ("report-card", "write the run's report card"),
@@ -720,6 +722,8 @@ def render_status(data):
         rows = []
         for agent in agents:
             piece = agent["piece_label"]
+            if piece != lib.UNRECORDED_PIECE:
+                agent = dict(agent, piece_id=None)
             if agent.get("piece_id"):
                 piece += " [%s]" % agent["piece_id"]
             last = agent["last"]
@@ -780,11 +784,161 @@ def cmd_status(argv):
     return lib.EXIT.OK
 
 
+_DASH_BUILD_RE = re.compile(r"^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$")
+
+
+def cmd_dashboard(argv):
+    p = _parser("dashboard", "Open the board in your browser, on this computer only.")
+    p.add_argument("--port", default="7878",
+                   help="first port to try (default 7878; 0 lets the system pick; 1024 to 65535)")
+    p.add_argument("--no-open", action="store_true", help="print the address without opening a browser")
+    p.add_argument("--build", help="open on one build, written project/id")
+    args = p.parse_args(argv)
+    if not re.fullmatch(r"[0-9]+", args.port) or not (int(args.port) == 0 or 1024 <= int(args.port) <= 65535):
+        _fail(lib.EXIT.USAGE, "--port must be 0 or a number from 1024 to 65535.", "bad --port")
+    if args.build is not None:
+        parts = args.build.split("/")
+        if not _DASH_BUILD_RE.fullmatch(args.build) or any(part in (".", "..") for part in parts):
+            _fail(lib.EXIT.USAGE, "--build must look like project/id, for example demo/alpha.", "bad --build")
+        if not (lib.runs_root() / parts[0] / parts[1] / "trace.jsonl").is_file():
+            _fail(lib.EXIT.MISSING, "no build called %s. See the builds with: factory status --all" % args.build,
+                  "no such build")
+    path = SCRIPT_DIR.parent / "dashboard" / "server.py"
+    if not path.is_file():
+        _fail(lib.EXIT.MISSING, "the dashboard files are missing from this copy of the kit.", "dashboard files missing")
+    sys.dont_write_bytecode = True
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("factory_dashboard_server", str(path))
+    server = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(server)
+    return server.run(port=int(args.port), open_browser=not args.no_open, build=args.build)
+
+
+# ---------------------------------------------------------------------------
+# factory finish
+# ---------------------------------------------------------------------------
+
+LEFTOVER_FORMAT_ERROR = 'must look like ID=reason, for example B2="not needed after all".'
+
+
+def _parse_leftovers(values):
+    """[(id, reason)] in the order given; a repeated id keeps its last reason."""
+    found = {}
+    for value in values or []:
+        ident, equals, reason = value.partition("=")
+        ident, reason = ident.strip(), reason.strip()
+        if not equals or not ident or not 1 <= len(reason) <= 200:
+            _fail(lib.EXIT.USAGE, "--leftover " + LEFTOVER_FORMAT_ERROR, "bad --leftover")
+        found.pop(ident, None)
+        found[ident] = reason
+    return list(found.items())
+
+
+def _open_work(spans, board_data):
+    """What is still open, read from the log as written: (questions, calls, pieces)."""
+    names = {piece["id"]: piece["name"] for piece in board_data["plan"]["pieces"]}
+    questions = [span.get("gate") or "Decision" for span in spans
+                 if span.get("kind") == "wait" and span.get("status") == "running"
+                 and span.get("waiting_on") == "human"]
+    calls = []
+    for span in spans:
+        if span.get("kind") in ("agent_call", "command") and span.get("status") == "running":
+            node = span.get("node") if isinstance(span.get("node"), str) else None
+            name = names.get(node)
+            if not name or name in (lib.UNRECORDED_PIECE, lib.NO_PLAIN_NAME):
+                name = lib.role_label(span.get("actor"))
+            ident = span.get("call") if isinstance(span.get("call"), str) and span.get("call") else span["span_id"]
+            calls.append({"id": ident, "node": node, "name": name})
+    pieces = [{"id": piece["id"], "name": piece["name"], "label": piece["state_label"]}
+              for piece in board_data["plan"]["pieces"]
+              if piece.get("planned", True) and piece["state"] != "done"]
+    return questions, calls, pieces
+
+
+def cmd_finish(argv):
+    p = _parser("finish", "Mark the build finished. It refuses while a question, a call or a piece is "
+                          "still open, unless you give a reason for each one you are leaving.")
+    p.add_argument("--build", help="the build, written project/id (default: the current build)")
+    p.add_argument("--leftover", action="append", metavar="ID=REASON",
+                   help="leave one open call or piece as it is and record why (1 to 200 characters)")
+    p.add_argument("--plain", help="one plain sentence for the log (default: a fixed sentence)")
+    args = p.parse_args(argv)
+    leftovers = _parse_leftovers(args.leftover)
+    build = lib.select_build(args)
+    notices = []
+    with lib.transaction(build.dir) as tx:
+        spans = tx.read()["spans"]
+        if lib._finish_marker(spans) is not None:
+            print("%s/%s was already marked finished." % (build.project, build.id))
+            return lib.EXIT.OK
+        stamp = lib.now()
+        board_data = lib.board(build.dir, stamp)
+        questions, calls, pieces = _open_work(spans, board_data)
+        known = {item["id"]: "call" for item in calls}
+        known.update({item["id"]: "piece" for item in pieces if item["id"] not in known})
+        for ident, _reason in leftovers:
+            if ident not in known:
+                _fail(lib.EXIT.USAGE, "--leftover names %s, which is not open in this build." % ident,
+                      "--leftover names something not open")
+        given = {ident for ident, _reason in leftovers}
+        covered = {item["id"] for item in pieces if item["id"] in given}
+        still = ([("question", name, None, "answer it in the conversation first") for name in questions]
+                 + [("call", item["id"], item["name"], "still running") for item in calls
+                    if item["id"] not in given and item["node"] not in covered]
+                 + [("piece", item["id"], item["name"], item["label"]) for item in pieces
+                    if item["id"] not in given])
+        if still:
+            lines = ["factory: this build cannot be finished yet. Still open:"]
+            for kind, ident, name, tail in still:
+                lines.append("  %s %s%s: %s" % (kind, ident, "" if name is None else " (%s)" % name, tail))
+            lines.append('Close them, or give a reason for each one you are leaving: --leftover ID="why"')
+            _fail(lib.EXIT.NO, "\n".join(lines)[len("factory: "):], "build still has open work")
+        count = len(leftovers)
+        plain, source = "The build was marked finished.", "auto"
+        if count:
+            plain = "The build was marked finished with %s left open." % (
+                "1 thing" if count == 1 else "%d things" % count)
+        if args.plain is not None:
+            fields, notices = lib.closing_plain_fields(
+                "done", "feature", args.plain, None, None,
+                lib.plain_words_of(lib.lenient_config(Path(os.getcwd()))))
+            if fields.get("plain"):
+                plain, source = fields["plain"], fields["plain_source"]
+        # a marker never reads as older than the work it closes, even when this computer's clock is behind
+        latest = max([lib.to_epoch(span.get("event")) for span in spans
+                      if lib.to_epoch(span.get("event")) is not None] or [0])
+        end = lib.from_epoch(max(lib.to_epoch(stamp), latest))
+        for span in spans:
+            if span.get("kind") == "phase" and span.get("status") == "running":
+                closing = {"span_id": span["span_id"], "kind": "phase", "status": "done", "end": end}
+                start = lib.to_epoch(span.get("start"))
+                if start is not None:
+                    closing["duration_s"] = max(0, int(lib.to_epoch(end) - start))
+                tx.add(closing)
+        record = {"status": "done", "end": end, "plain": plain, "plain_source": source,
+                  "leftovers": [{"id": ident, "kind": known[ident], "reason": reason}
+                                for ident, reason in leftovers]}
+        features = [span for span in spans if span.get("kind") == "feature"]
+        if features:
+            tx.add(dict(record, span_id=features[-1]["span_id"]))
+        else:
+            started = tx.read()["meta"].get("started")
+            tx.add(dict(record, kind="feature", actor="orchestrator",
+                        start=started if lib.to_epoch(started) is not None else end))
+    for notice in notices:
+        print(notice, file=sys.stderr)
+    print("Finished %s/%s." % (build.project, build.id) if not leftovers else
+          "Finished %s/%s. Left open: %d, reasons recorded." % (build.project, build.id, len(leftovers)))
+    return lib.EXIT.OK
+
+
 # ---------------------------------------------------------------------------
 # dispatch
 # ---------------------------------------------------------------------------
 
 LOCAL = {"init": cmd_init, "new": cmd_new, "phase": cmd_phase, "log": cmd_log, "status": cmd_status}
+LOCAL["dashboard"] = cmd_dashboard
+LOCAL["finish"] = cmd_finish
 
 
 def print_help(stream):

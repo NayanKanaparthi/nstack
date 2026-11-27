@@ -304,7 +304,7 @@ class BoardOwnerContractTests(PageFixtureCase):
                          "Building: 1 of 4 pieces done, 1 being checked, 1 being built.")
         self.assertEqual(owner["counts"], {
             "total": 4, "done": 1, "building": 1, "checking": 1,
-            "sent_back": 0, "stopped": 0, "waiting": 1, "needs_you": 0,
+            "built": 0, "sent_back": 0, "stopped": 0, "waiting": 1, "needs_you": 0,
         })
         self.assertEqual(owner["started_label"], "9:00 am")
         self.assertEqual(owner["elapsed_label"], "50 min")
@@ -390,7 +390,7 @@ class BoardOwnerContractTests(PageFixtureCase):
         _, grouped = self.board(group_build, "2026-01-10T14:20:00Z")
         grouped_a1 = next(piece for piece in grouped["plan"]["pieces"] if piece["id"] == "A1")
         self.assertEqual((grouped_a1["attempts"], grouped_a1["attempt_label"],
-                          grouped_a1["state"]), (1, "", "checking"))
+                          grouped_a1["state"]), (1, "", "built"))
         self.assertEqual([call["label"] for call in grouped_a1["calls"]],
                          ["Attempt 1", "Attempt 1"])
 
@@ -427,7 +427,8 @@ class BoardOwnerContractTests(PageFixtureCase):
         self.assertEqual((c1["state"], c1["state_label"], c1["now"]),
                          ("needs_you", "Waiting for you", "This waits on your decision."))
         self.assertTrue(needs["owner"]["needs_you"])
-        self.assertEqual(needs["owner"]["items"][0]["how"], "Reply in the Conductor chat.")
+        self.assertEqual(needs["owner"]["items"][0]["how"],
+                         "Answer in the session where you are running the build.")
         self.assertEqual(needs["owner"]["sentence"],
                          "3 of 4 pieces are done. Your answer is needed: release decision.")
 
@@ -438,6 +439,9 @@ class BoardOwnerContractTests(PageFixtureCase):
              "plain_source": "auto"},
             {"v": 1, "span_id": "f1", "ts": "2026-01-10T15:51:00Z",
              "end": "2026-01-10T15:51:00Z", "status": "done"},
+            {"v": 1, "span_id": "feature", "ts": "2026-01-10T15:52:00Z",
+             "end": "2026-01-10T15:52:00Z", "status": "done", "leftovers": [],
+             "plain": "The build was marked finished."},
         ]
         done_build = self.make_custom("pg-done", done_lines)
         _, done = self.board(done_build, "2026-01-10T15:55:00Z")
@@ -450,7 +454,9 @@ class BoardOwnerContractTests(PageFixtureCase):
         self.assertEqual(stale["build"]["state"], "idle")
         self.assertFalse(any(piece["state"] in ("building", "checking")
                              for piece in stale["plan"]["pieces"]))
-        self.assertTrue(stale["owner"]["sentence"].endswith("none running right now."))
+        self.assertEqual(stale["owner"]["sentence"],
+                         "Nothing is running. Last activity Jan 10, 9:40 am. "
+                         "1 of 4 pieces done, 2 ended early.")
 
     def test_T_PG_46_47_and_91_old_missing_bad_extra_and_hostile_log_labels(self):
         """T-PG-46,47,91: plan fallback is ordered, warning-safe, and strips ids from labels."""
