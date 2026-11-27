@@ -15,3 +15,14 @@ privacy_scan.py --patterns <private list> --git-changed origin/main
 privacy scan: 0 hits in 0 files (72 files scanned, 16546 added lines scanned)
 exit 0
 ```
+
+### Privacy scan, dashboard update
+
+Run again on every added line of the dashboard update against main (this record is the only line added after the run). The credit line with the author's name and the link to this repo are there by the author's choice and are allowed by name in the private list:
+
+```
+privacy_scan.py --patterns <private list> --git-changed origin/main
+notes/factory/screenshots/05-technical-details.jpg:574: email: [6 chars]
+privacy scan: 1 hits in 1 files (34 files scanned, 13205 added lines scanned)
+exit 0
+```
