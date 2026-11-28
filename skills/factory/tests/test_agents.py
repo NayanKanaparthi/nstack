@@ -69,7 +69,7 @@ class RunTests(AgentCommandCase):
 
         silent = self.fake_program("silent", "pass")
         quiet = self.run_factory("run", "--actor", "x", "--call", "silent.1",
-                                 "--input", str(self.prompt), "--", str(silent))
+                                 "--input", str(self.prompt), "--", str(silent), timeout=2.0)
         self.assertEqual(quiet.returncode, 0)
         close = self.trace()[-1]
         self.assertEqual(close["output_chars"], 0)

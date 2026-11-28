@@ -80,7 +80,7 @@ Every agent call has a unique call id before it is sent: `<piece>.<role>.<try>`,
 factory run --actor maker --call N1.maker.2 --node N1 --iteration 2 --runner claude --model opus-5-5 --label "Login form" --input prompt.md -- <program> [args]
 ```
 
-`--runner` names the program family (for example `claude`, `codex`, `opencode`) and decides the data rule. `--label` is the plain piece name the owner sees on the board; without it the board says `Piece name not recorded`.
+`--runner` names the program family (for example `claude`, `codex`, `opencode`) and decides the data rule. `--label` is the plain piece name the owner sees on the board; without it the board says `Piece name not recorded`. A side job started without a label shows as `Side task`.
 
 Use `--input-as-arg` when the program wants the prompt as its last argument. A prompt typed only on the command line is refused: it must be in a file. [enforced by code]
 

@@ -30,6 +30,16 @@ function equal(actual, expected, message) { assert.deepStrictEqual(actual, expec
 function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 function shot(name) { return path.join(EVIDENCE, name); }
 
+async function settleMotion(page) {
+  await page.evaluate(async () => {
+    const animations = document.getAnimations().filter((animation) => {
+      const timing = animation.effect && animation.effect.getComputedTiming();
+      return animation.playState !== 'finished' && timing && Number.isFinite(timing.endTime);
+    });
+    await Promise.all(animations.map((animation) => animation.finished.catch(() => {})));
+  });
+}
+
 function runSync(command, args, env) {
   return childProcess.spawnSync(command, args, {
     cwd: ROOT,
@@ -121,7 +131,9 @@ async function guardedPage(context, guard, address) {
 
 async function installClock(page, iso) {
   check(page.clock && typeof page.clock.install === 'function', 'Playwright page.clock is unavailable');
-  await page.clock.install({time: new Date(iso)});
+  const testTime = new Date(iso);
+  await page.clock.install({time: new Date(testTime.getTime() - 60000)});
+  await page.clock.pauseAt(testTime);
 }
 
 async function openState(browser, fixtureHome, build, options) {
@@ -185,6 +197,17 @@ async function introCases(browser, home) {
     const page = first.page;
     const intro = page.locator('#fd-intro');
     check(await intro.count() === 1, 'intro missing at DOMContentLoaded');
+    const introEnded = page.evaluate(() => new Promise((resolve) => {
+      const started = performance.now();
+      const observer = new MutationObserver(() => {
+        if (!document.getElementById('fd-intro')) {
+          observer.disconnect();
+          resolve(performance.now() - started);
+        }
+      });
+      observer.observe(document.body, {childList: true});
+    }));
+    void introEnded.catch(() => {});
     equal(await intro.getAttribute('aria-hidden'), 'true');
     equal(await page.locator('body > :first-child').getAttribute('id'), 'fd-intro');
     equal(await page.locator('[data-fx=intro-word]').innerText(), 'factory');
@@ -208,8 +231,10 @@ async function introCases(browser, home) {
     await page.clock.runFor(100);
     check(await intro.evaluate((el) => el.classList.contains('fd-out')), 'fd-out missing at 1200ms');
     check(!(await page.locator('#view-factory').evaluate((el) => el.classList.contains('fd-pre'))), 'page remained fd-pre');
-    await page.clock.runFor(350);
-    check(await intro.count() === 0, 'intro remains after 1550ms');
+    await page.clock.runFor(300);
+    const introElapsed = await introEnded;
+    check(introElapsed <= 1500, `intro exceeded its 1.5 second budget: ${introElapsed}ms`);
+    check(await intro.count() === 0, 'intro end signal fired before removal');
     equal(await page.locator('[data-fx=sentence]').innerText(), 'Building: 1 of 4 pieces done, 1 being checked, 1 being built.');
   }, true);
   await test('T-DB-45', async () => {
@@ -354,6 +379,12 @@ async function pageCases(browser, home) {
     await cleanupState(state);
   });
 
+  await test('T-DB-71', async () => {
+    const state = await openState(browser, home, 'pg-done', {seen: true}); await settleData(state.page);
+    equal(await state.page.locator('.fx2-meta-l').innerText(), 'Started at 9:00 am. Took 1 h 44 min.');
+    await cleanupState(state);
+  });
+
   await test('T-DB-54', async () => {
     const state = await openState(browser, home, 'pg1', {seen: true}); await settleData(state.page);
     await state.page.locator('[data-piece=B1]').click();
@@ -407,7 +438,30 @@ async function pageCases(browser, home) {
     const state = await openState(browser, home, 'pg1', {seen: true}); await settleData(state.page);
     await state.page.getByText('What do these words mean?', {exact: true}).click();
     equal(await state.page.locator('[data-fx=legend-row]').count(), 10);
-    equal(await state.page.locator('[data-fx=legend-title]').allInnerTexts(), ['Waiting', 'Building', 'Checking', 'Sent back', 'Done', 'Stopped', "Didn't finish (shown as 'failed' in technical details)", 'Waiting for you', 'Attempt 2 of this piece', 'Built, waiting for a check']);
+    equal(await state.page.locator('[data-fx=legend-title]').allInnerTexts(), ['Waiting', 'Building', 'Being checked', 'Sent back', 'Done', 'Stopped', "Didn't finish (shown as 'failed' in technical details)", 'Waiting for you', 'Attempt 2 of this piece', 'Built, waiting for a check']);
+    await cleanupState(state);
+  });
+
+  await test('T-DB-72', async () => {
+    const state = await openState(browser, home, 'pg1', {seen: true}); await settleData(state.page);
+    await state.page.getByText('What do these words mean?', {exact: true}).click();
+    equal(await state.page.locator('[data-fx=legend-title]').nth(2).innerText(), 'Being checked');
+    await cleanupState(state);
+  });
+
+  await test('T-DB-73', async () => {
+    const state = await openState(browser, home, 'pg1', {seen: true}); await settleData(state.page);
+    await state.page.getByText('What do these words mean?', {exact: true}).click();
+    const box = state.page.locator('.fx2-legend-box');
+    const last = state.page.locator('[data-fx=legend-row]').last();
+    const stripTop = await state.page.evaluate(() => innerHeight - 40);
+    let boxBounds = await box.boundingBox();
+    check(boxBounds.y + boxBounds.height <= stripTop, 'word guide extends behind the bottom credit strip');
+    await last.evaluate((node) => node.scrollIntoView({block: 'nearest'}));
+    boxBounds = await box.boundingBox();
+    const lastBounds = await last.boundingBox();
+    check(lastBounds.y >= boxBounds.y && lastBounds.y + lastBounds.height <= stripTop,
+      'last word guide entry is not fully visible above the bottom credit strip');
     await cleanupState(state);
   });
 
@@ -522,6 +576,7 @@ async function screenshotCases(browser, home) {
       if (action === 'legend') await state.page.getByText('What do these words mean?', {exact: true}).click();
       if (action === 'picker') await state.page.locator('[data-fx=picker]').click();
       if (action === 'narrow') check(await state.page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), 'narrow page overflows');
+      await settleMotion(state.page);
       await state.page.screenshot({path: shot(name), fullPage: false}); await cleanupState(state);
       check(fs.statSync(shot(name)).size >= 20000, `${name} is too small`);
     }

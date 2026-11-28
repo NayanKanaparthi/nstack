@@ -233,3 +233,6 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:40px;z-inde
 .fd-intro-l:nth-child(6){animation-delay:.305s}
 .fd-intro-l:nth-child(7){animation-delay:.35s}
 .fd-intro-by{font-size:15px;font-weight:500;letter-spacing:.01em;color:rgba(235,235,245,.5);animation:fd-by .4s ease-out .7s both}
+
+/* The word guide never runs behind the bottom credit strip: it scrolls inside itself. */
+#view-factory .fx2-legend-box{position:fixed;top:72px;bottom:60px;right:max(24px,calc(50vw - 526px));max-height:none;overflow-y:auto;box-sizing:border-box;height:fit-content}

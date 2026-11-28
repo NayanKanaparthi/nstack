@@ -489,6 +489,18 @@ class BoardOwnerContractTests(PageFixtureCase):
                          "Work in the log that the plan does not list.")
         self.assertEqual(extra["plan"]["pieces"][-1]["name"], "Extra work")
 
+        unlabelled_lines = pg1_lines() + [
+            start_line("q10", "2026-01-10T14:41:00Z", "maker", "Q10.maker.1", "Q10",
+                       "sonnet-5-5"),
+            end_line("q10", "2026-01-10T14:45:00Z",
+                     "The builder finished the side job. A checker reads it next."),
+        ]
+        unlabelled_build = self.make_custom("pg-unlabelled-side-job", unlabelled_lines)
+        _, unlabelled = self.board(unlabelled_build)
+        side_job = next(piece for piece in unlabelled["plan"]["pieces"]
+                        if piece["id"] == "Q10")
+        self.assertEqual(side_job["name"], "Side task")
+
         label_build = self.factory_home / "runs" / "toy" / "pg-label"
         label_build.mkdir(parents=True)
         write_jsonl(label_build / "trace.jsonl", [

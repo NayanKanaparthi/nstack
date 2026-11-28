@@ -12,7 +12,7 @@
   var LEGEND = [
     ['Waiting', 'This piece cannot start yet because it needs other pieces to finish first.'],
     ['Building', 'A builder is making this piece right now.'],
-    ['Checking', "A different AI is reading the builder's work and looking for problems."],
+    ['Being checked', "A different AI is reading the builder's work and looking for problems."],
     ['Sent back', 'The checker found problems. The builder will fix them in a new attempt.'],
     ['Done', 'The checker is satisfied. Nothing more is needed on this piece.'],
     ['Stopped', 'This attempt ended early, on purpose or because something ran out or got stuck. The note says which and what happens next.'],
@@ -309,8 +309,9 @@
     var meta = h('div', 'fx2-meta');
     var left = h('span', 'fx2-meta-l');
     if (str(owner.started_label, '')) {
+      var finished = st.board && st.board.build && st.board.build.state === 'done';
       text(left, 'Started at ' + owner.started_label + '. ');
-      if (str(owner.elapsed_label, '')) add(left, h('b', '', owner.elapsed_label), document.createTextNode(' so far.'));
+      if (str(owner.elapsed_label, '')) add(left, document.createTextNode(finished ? 'Took ' : ''), h('b', '', owner.elapsed_label), document.createTextNode(finished ? '.' : ' so far.'));
     }
     add(meta, left);
     if (str(owner.deadline_text, '')) add(meta, plain(fx(h('span', 'fx2-deadline', owner.deadline_text), 'deadline')));
