@@ -22,6 +22,6 @@ Run again on every added line of the dashboard update against main (this record 
 
 ```
 privacy_scan.py --patterns <private list> --git-changed origin/main
-privacy scan: 0 hits in 0 files (35 files scanned, 13066 added lines scanned)
+privacy scan: 0 hits in 0 files (37 files scanned, 13221 added lines scanned)
 exit 0
 ```
