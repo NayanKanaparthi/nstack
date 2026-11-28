@@ -69,7 +69,7 @@ class RunTests(AgentCommandCase):
 
         silent = self.fake_program("silent", "pass")
         quiet = self.run_factory("run", "--actor", "x", "--call", "silent.1",
-                                 "--input", str(self.prompt), "--", str(silent))
+                                 "--input", str(self.prompt), "--", str(silent), timeout=2.0)
         self.assertEqual(quiet.returncode, 0)
         close = self.trace()[-1]
         self.assertEqual(close["output_chars"], 0)
@@ -168,6 +168,10 @@ class RunTests(AgentCommandCase):
 
     def test_run_data_retention_rule(self):
         """T-RUN-06: retained-data calls need marking plus proof; public/clean pass; local calls need neither."""
+        def run(*args):
+            # This contract starts seven fresh CLI processes; avoid a load-dependent 0.95 s failure.
+            return self.run_factory(*args, timeout=2.0)
+
         public = self.tmp / "public"; public.mkdir()
         public_prompt = public / "p.md"; public_prompt.write_text("public synthetic text\n")
         fake = self.fake_program("ok", "print('OK')")
@@ -178,29 +182,29 @@ class RunTests(AgentCommandCase):
         common = ("run", "--actor", "reviewer", "--call", "free.1", "--runner", "opencode",
                   "--model", "opencode/some-free", "--input", str(self.prompt), "--", str(fake))
         before = self.build.joinpath("trace.jsonl").read_bytes()
-        self.assertEqual(self.run_factory(*common).returncode, 2)
+        self.assertEqual(run(*common).returncode, 2)
         self.assertEqual(self.build.joinpath("trace.jsonl").read_bytes(), before)
         private_path = "/" + "home" + "/example/private"
         self.prompt.write_text("home path " + private_path + "\n")
         private = list(common); private.insert(private.index("--"), "--non-private")
-        result = self.run_factory(*private)
+        result = run(*private)
         self.assertEqual(result.returncode, 2)
         self.assertNotIn(private_path, result.stderr)
         self.prompt.write_text("clean synthetic prompt\n")
         in_public = list(private); in_public[in_public.index("--"):in_public.index("--")] = ["--cwd", str(public)]
-        clean = self.run_factory(*in_public)  # a retaining runner must also run in a public folder
+        clean = run(*in_public)  # a retaining runner must also run in a public folder
         self.assertEqual(clean.returncode, 0)
         self.assertEqual(self.trace()[-2]["data_proof"], "scan-clean")
         public_args = list(in_public); public_args[public_args.index(str(self.prompt))] = str(public_prompt)
-        self.assertEqual(self.run_factory(*public_args).returncode, 0)
+        self.assertEqual(run(*public_args).returncode, 0)
         self.assertEqual(self.trace()[-2]["data_proof"], "public-root")
-        local = self.run_factory("run", "--actor", "reviewer", "--call", "local.1",
-                                 "--runner", "opencode", "--model", "ollama/qwen3:4b",
-                                 "--input", str(self.prompt), "--", str(fake))
+        local = run("run", "--actor", "reviewer", "--call", "local.1",
+                    "--runner", "opencode", "--model", "ollama/qwen3:4b",
+                    "--input", str(self.prompt), "--", str(fake))
         self.assertEqual(local.returncode, 0)
-        direct = self.run_factory("run", "--actor", "reviewer", "--call", "local.2",
-                                  "--runner", "ollama", "--model", "qwen3:4b",
-                                  "--input", str(self.prompt), "--", str(fake))
+        direct = run("run", "--actor", "reviewer", "--call", "local.2",
+                     "--runner", "ollama", "--model", "qwen3:4b",
+                     "--input", str(self.prompt), "--", str(fake))
         self.assertEqual(direct.returncode, 0)
         self.assertNotIn("data_class", self.trace()[-2])
 

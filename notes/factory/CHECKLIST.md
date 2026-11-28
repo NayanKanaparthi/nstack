@@ -32,8 +32,8 @@ Skill: factory. Version: 0.1.0.
 
 ## C. Privacy
 
-21. Does no file in `skills/factory/` or `notes/factory/` hold a private person name, company, client or employer name?
-22. Does no file hold a personal path such as `/Users/<name>` or `/home/<name>`, an email address, a token, a key or an account detail?
+21. Does no file in `skills/factory/` or `notes/factory/` hold a private person name, company, client or employer name, except the author's own name in the dashboard credit line `factory · by Nayan Kanaparthi` (and the same words in the README text that describes it)?
+22. Does no file hold a personal path such as `/Users/<name>` or `/home/<name>`, an email address, a token, a key or an account detail, except the one link from the dashboard credit line to the project repo (`https://github.com/NayanKanaparthi/nstack`)?
 23. Do the tests use synthetic fixtures only, with no real log, message or setting?
 24. Does the privacy scan in the work tree (`--git-changed origin/main`) exit 0?
 
@@ -57,9 +57,9 @@ Skill: factory. Version: 0.1.0.
 
 ## F. Tests
 
-37. Do all tests run with one command from the skill folder, `PYTHONPYCACHEPREFIX=/tmp/factory-test-cache python3 -m unittest discover -s tests -t .`?
+37. Do all the Python tests run with one command from the skill folder, `PYTHONPYCACHEPREFIX=/tmp/factory-test-cache python3 -m unittest discover -s tests -t .`, and does the README say the browser checks are a separate optional runner (`tests/browser/README.md`) that this command does not run?
 38. Does that command exit 0 on a clean copy of the folder?
-39. Do the tests never call a model or the network?
+39. Do the tests never call a real model and never use the internet, using only this computer (`127.0.0.1`) for the dashboard tests?
 40. Do the tests run in under 60 seconds in total?
 
 ## G. Known limits
@@ -69,7 +69,7 @@ Skill: factory. Version: 0.1.0.
 43. Does it say the sleep check and the desktop notification are macOS only?
 44. Does it say preflight cannot read remaining credit and sends a real one-line request instead?
 45. Does it say an in-session sub-agent is on record only if the orchestrator logs it?
-46. Does it say there is no dashboard and the board is `factory status`?
+46. Does it say the dashboard is read-only and local, that it cannot answer decisions, and that `factory status` shows the same board in a terminal?
 
 ## H. Repo edits
 

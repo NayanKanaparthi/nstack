@@ -1,6 +1,6 @@
 {
   "roles": {
-    "planner": {"runner": "claude", "model": "fable-5-2", "effort": "xhigh"},
+    "planner": {"runner": "claude", "model": "fable-5-2", "effort": "medium"},
     "maker": {"runner": "claude", "model": "opus-5-5"},
     "checker": {"runner": "claude", "model": "fable-5-2"}
   },

@@ -36,21 +36,24 @@ The build starts at intake, before a plan exists. Once the plan is approved, see
 
 Move through phases with `factory phase <name>`: `intake`, `plan`, `plan-review`, `gate-a`, `tests`, `build`, `integration`, `e2e`, `evals`, `gate-b`, `release`, `retro`. Changing phase prints a warning for anything left unfinished.
 
+After `factory new`, tell the owner they can run `factory dashboard` to watch the build; it updates by itself while agents work. Do not start it for them unless they ask: it opens their browser.
+
 ## 3. The phases
 
 **Intake.** Write `INTAKE.md` from the template: what was asked, the tier (B for behavior, R for routing or content with metrics), the deadline. Log: `factory phase intake`. Stop when the request is clear. Ask the owner only what you cannot decide.
 
 **Plan.** Planner role writes `GOALS.md`, `SPEC.md`, `GRAPH.yaml`, `RUBRIC.md` (a checklist of pass or fail items, for example "R1: the export button writes a CSV file"), `TESTPLAN.md` from `templates/`. Every acceptance criterion maps to tests. Every piece owns files that no other piece owns. Stop when the plan files exist and each criterion has a test.
 
-**Plan review.** A reviewer from a different vendor than the maker reads the plan. Rounds continue while each round closes findings. Exit when the checklist in `PROCESS.md` is all yes and no blocker or major finding is open. Breaker: 3 rounds (we picked 3; it is a rule of thumb, not a measured value). What is still open then goes to the owner as a short list at the gate.
+**Plan review.** A reviewer from a different vendor than the maker reads the plan. [on trust] Rounds continue while each round closes findings. Exit when the checklist in `PROCESS.md` is all yes and no blocker or major finding is open. Breaker: 3 rounds (we picked 3; it is a rule of thumb, not a measured value). What is still open then goes to the owner as a short list at the gate.
 
 **GATE A.** Ask the owner the open decisions through `factory gate open` (section 5). Wait for the answer, then `factory gate close <span_id> --answer "..."`. Run `factory check` first.
 
-**Tests first.** Step one is the readiness gate: the existing suite is green before any feature code (`factory step tests.fast`). A fresh test writer session, on a different vendor than the maker, writes the tests from `TESTPLAN.md`. Test-acceptance gate: existing suite green, every new test fails for the expected reason, every criterion maps to tests that encode it. Then record the commit and hashes in `TESTLOCK`. Locked tests are read-only for makers.
+**Tests first.** Step one is the readiness gate: the existing suite is green before any feature code (`factory step tests.fast`).
+A fresh test writer session, on a different vendor than the maker, writes the tests from `TESTPLAN.md`. [on trust] Test-acceptance gate: existing suite green, every new test fails for the expected reason, every criterion maps to tests that encode it. Then record the commit and hashes in `TESTLOCK`. Locked tests are read-only for makers. [on trust]
 
-**Build loop.** For each piece: write a packet from `templates/node-packet.md` (its slice of the spec, its rubric items, its tests, the interfaces it must honor, the constitution; never the whole plan). The maker builds. Run `factory step tests.fast`. A separate checker session judges each rubric item with evidence and returns APPROVED or REJECTED with numbered fixes. Maker and checker are never the same session. Record each verdict with `factory log end <span_id> --verdict approved|rejected --rubric-pass R1,R2 --rubric-fail R3 --why "..."`. The code computes rubric deltas; you never do.
+**Build loop.** For each piece: write a packet from `templates/node-packet.md` (its slice of the spec, its rubric items, its tests, the interfaces it must honor, the constitution; never the whole plan). The maker builds. Run `factory step tests.fast`. A separate checker session judges each rubric item with evidence and returns APPROVED or REJECTED with numbered fixes. Maker and checker are never the same session. [on trust] Record each verdict with `factory log end <span_id> --verdict approved|rejected --rubric-pass R1,R2 --rubric-fail R3 --why "..."`. The code computes rubric deltas; you never do.
 
-Breakers: the same rubric item fails twice, so a second vendor diagnoses before the next try. Two churn rounds in a row (nothing new passes) means re-plan the piece. Piece time box exceeded: log it, then continue, split or escalate. Stop times passed: cut SHOULD criteria and log the cut. Changing a MUST criterion needs the owner.
+Breakers: the same rubric item fails twice, so a second vendor diagnoses before the next try. [on trust] Two churn rounds in a row (nothing new passes) means re-plan the piece. Piece time box exceeded: log it, then continue, split or escalate. Stop times passed: cut SHOULD criteria and log the cut. Changing a MUST criterion needs the owner.
 
 **Integration.** Merge in graph order, run `factory step tests.fast` after each merge. If integration needs real code, it runs the normal maker and checker loop. Stop when every piece is merged and the suite is green.
 
@@ -58,11 +61,12 @@ Breakers: the same rubric item fails twice, so a second vendor diagnoses before 
 
 **Evals.** Only for tier R. Run each metric as `factory step evals.<metric id>`. A metric that misses its target or prints no number fails loudly. Never tune on the held-out set. Stop when every metric meets its target. Eval sets (known answers in a JSONL file, settings under `evals.sets`) run as `factory eval run <set id>`: one example at a time, scored by a fixed formula, no model involved. A missed set target is never fixed silently or hidden: put the numbers in the release question at GATE B, in plain words, and let the owner decide. A checker may be shown the output of `factory eval show <set id>` (or the report card line), never the example files or the results files. When a set misses its accuracy target the orchestrator may run the improve loop, one set at a time, only when the owner or the orchestrator starts it. Before `start`, rerun every set so the baseline matches the code. Then for each round: `factory eval improve next <set id>` (on `stop` go to the end); `factory eval improve brief <set id> researcher` printed and passed unchanged to a researcher with `factory run --actor researcher --call improve.<set>.r<N>.research`; save the researcher's printed note as `evals/improve/<session>/r<N>-research.md` in the build folder; `factory eval improve brief <set id> builder` passed unchanged to `factory run --actor maker --call improve.<set>.r<N>.build`; rerun every set (`factory eval run <id>`) and the suite (`factory step tests.fast`, plus `factory step evals.<id>` per metric); then `factory eval improve decide <set id> --suite ok|failed` (`failed` when any suite step failed). On `reverted` with an undo line, run that line, then rerun every set, also when the session stops on that round. At the end run `factory eval improve report <set id>`. When the target is still missed, ask the owner in plain words: the report text, the options (accept the score and release, allow another batch of rounds, or change the target or the examples, which is the owner's edit) and a suggested answer. Do not start another batch without the owner's yes. Each round spends model calls, so the round and minute limits (`evals.improve`) are the cost bound.
 
-**GATE B.** One review of the full diff comes from a different vendor than the maker, before GATE B. Run `factory check`. Then `factory gate open` for release approval.
+**GATE B.**
+One review of the full diff comes from a different vendor than the maker, before GATE B. [on trust] Run `factory check`. Then `factory gate open` for release approval.
 
-**Release.** Only after GATE B is answered yes. Run `factory step release.preflight.<name>`, then `release.steps.<name>`, then `release.smoke.<name>`, each with its own time limit. Stop when smoke passes, or at the first failure: report it, do not retry blindly.
+**Release.** Only after GATE B is answered yes. [on trust] Run `factory step release.preflight.<name>`, then `release.steps.<name>`, then `release.smoke.<name>`, each with its own time limit. Stop when smoke passes, or at the first failure: report it, do not retry blindly.
 
-**Retro.** `factory trace-report` and `factory report-card`. Read the computed report, not the raw log. Propose at most 3 process changes (our pick, so effects can be told apart). The owner switches them on.
+**Retro.** `factory trace-report` and `factory report-card`. Read the computed report, not the raw log. Propose at most 3 process changes (our pick, so effects can be told apart). The owner switches them on. Last step: run `factory finish`. [on trust]
 
 ## 4. Logging
 
@@ -76,13 +80,13 @@ Every agent call has a unique call id before it is sent: `<piece>.<role>.<try>`,
 factory run --actor maker --call N1.maker.2 --node N1 --iteration 2 --runner claude --model opus-5-5 --label "Login form" --input prompt.md -- <program> [args]
 ```
 
-`--runner` names the program family (for example `claude`, `codex`, `opencode`) and decides the data rule. `--label` is the plain piece name the owner sees on the board; without it the board says `Piece name not recorded`.
+`--runner` names the program family (for example `claude`, `codex`, `opencode`) and decides the data rule. `--label` is the plain piece name the owner sees on the board; without it the board says `Piece name not recorded`. A side job started without a label shows as `Side task`.
 
-Use `--input-as-arg` when the program wants the prompt as its last argument. A prompt typed only on the command line is refused: it must be in a file.
+Use `--input-as-arg` when the program wants the prompt as its last argument. A prompt typed only on the command line is refused: it must be in a file. [enforced by code]
 
 4. For an in-session sub-agent (not a process you launch), log it with two short commands: `factory log start --kind agent_call --actor checker --call N1.checker.2 --node N1 --iteration 2 --runner claude --model fable-5-2 --label "Login form" --input prompt.md`, then `factory log end <span_id> --output reply.md`. Name every sub-agent `<piece> <role> try <n>` so the board and the check line up.
 
-Project commands run through `factory step tests.fast`, `factory step evals.<metric id>`, `factory eval run <set id>` and `factory step release.steps.<name>`, never typed from memory. Check status any time with `factory status` (`--all` lists every build).
+Project commands run through `factory step tests.fast`, `factory step evals.<metric id>`, `factory eval run <set id>` and `factory step release.steps.<name>`, never typed from memory. [on trust] Check status any time with `factory status` (`--all` lists every build).
 
 If you missed a call, record it later with `factory log event --kind agent_call --actor maker --call N1.maker.3 --input prompt.md --notes "added late"`. A call nobody planned is acknowledged with `factory check --add`. Log lines are never edited.
 
@@ -101,11 +105,11 @@ Write it for someone who is not an engineer: one to three sentences (our choice 
 
 `factory plain` writes summaries for steps that have none, using the `summaries` role (a local model by default); it appends lines and never edits old ones. Run it right after `factory new --adopt`, and whenever `factory status` says `N steps have no plain summary yet`. `--dry-run` only counts, `--fallback-only` uses the fixed sentences without a model, `--limit N` and `--timeout S` bound it. `plain_words_ok` in `factory.json` lists project words the check allows (a product name, PDF, FAQ).
 
-A dashboard can show a build as a plan of stages and pieces. No dashboard ships with this kit, but `factory new` writes the data one needs into `plan.json`, from `GRAPH.yaml`. Give each piece `plain_name` (40 characters at most) and `purpose` (one sentence, 160 at most); both limits are our picks so a plan view stays readable, add `show: false` to hide a piece, write `depends_on: [A, B]` on one line, and end the graph with a `stages:` block (`name`, `purpose`, `members: [A, B]`). Pieces in one stage run side by side. `factory new <id> --from-graph GRAPH.yaml` writes `plan.json` into the build folder (a changed plan on `--adopt` is saved beside it as `plan-<time>.json`, never over it). `--stop "GATE B=17:30" --stop-plain "GATE B=Release decision"` gives a deadline its plain name. `factory gate open --node <piece>` ties a question to a piece.
+`factory dashboard` shows a build in the browser as a plan of stages and pieces, and `factory new` writes the data it needs into `plan.json`, from `GRAPH.yaml`. Give each piece `plain_name` (40 characters at most) and `purpose` (one sentence, 160 at most); both limits are our picks so a plan view stays readable, add `show: false` to hide a piece, write `depends_on: [A, B]` on one line, and end the graph with a `stages:` block (`name`, `purpose`, `members: [A, B]`). Pieces in one stage run side by side. `factory new <id> --from-graph GRAPH.yaml` writes `plan.json` into the build folder (a changed plan on `--adopt` is saved beside it as `plan-<time>.json`, never over it). `--stop "GATE B=17:30" --stop-plain "GATE B=Release decision"` gives a deadline its plain name. `factory gate open --node <piece>` ties a question to a piece.
 
 ## 5. Waiting and asking
 
-Whenever any agent is running, a `factory wait` timer runs in the background (default 480 seconds, our pick; `--timeout S` to change). It exits when something changes, and on timeout it prints who is running and how long they have been quiet. Never sit idle without a timer.
+Whenever any agent is running, a `factory wait` timer runs in the background (default 480 seconds, our pick; `--timeout S` to change). It exits when something changes, and on timeout it prints who is running and how long they have been quiet. Never sit idle without a timer. [on trust]
 
 Gate questions go through `factory gate open`:
 
@@ -113,28 +117,30 @@ Gate questions go through `factory gate open`:
 factory gate open --name "GATE A" --question "Should the new flag be on by default?" --recommend "No, keep it off." [--file QUESTIONS.md]
 ```
 
-A plain question, a suggested answer, one sentence why. No ids, no section numbers, no jargon. At most 5 questions per gate (our pick, so one reply can answer them). The command refuses a question longer than 300 characters (also our pick) or one that contains ids like `AC3` or `T-KIT-01`.
+A plain question, a suggested answer, one sentence why. No ids, no section numbers, no jargon. At most 5 questions per gate (our pick, so one reply can answer them). The command refuses a question longer than 300 characters (also our pick) or one that contains ids like `AC3` or `T-KIT-01`. [enforced by code]
 
 Notifications go only through configured channels (`notify.channels`). If `gate open` prints `Also send this through: <name>`, send it through that connector yourself, then record it with `factory gate sent <span_id> --channel connector`. Use a connector only when that line is printed. Inside the Conductor app (a separate Mac app some people use to run several agents side by side; the kit works without it) the question may also go through its question tool. Neither that nor a connector is ever the only path: always run `factory gate open`. Never pick a chat, mail or scheduling connector on your own. Notify for decisions only: gates, a MUST criterion at risk, a breaker escalation, a constitution amendment. Routine progress never notifies.
+
+A question opened with `factory gate open` shows at the top of the dashboard, but the owner answers it in this conversation, not on the page.
 
 ## 6. Hard rules
 
 - Log through `factory run` or `factory log`. Never write JSON log lines by hand.
-- Whenever any agent is running, a `factory wait` timer is running.
+- Whenever any agent is running, a `factory wait` timer is running. [on trust]
 - Every external step has a time limit. There is no "no limit".
 - Gate questions go through `factory gate open`: plain question, suggested answer, no ids, at most 5.
-- Eval files hold known answers. Makers never edit them or their targets; changing a target needs the owner.
+- Eval files hold known answers. Makers never edit them or their targets; changing a target needs the owner. [on trust]
 - The improve loop changes project code only, one change per round, and keeps a change only if `factory eval improve decide` says keep.
 - Only notify through configured channels.
-- Every agent dispatch gets a call id, added with `factory check --add` before it is sent, passed as `--call`, with its prompt in a file passed as `--input`.
-- `factory check` runs before each gate and before the report card. Fix each finding with a late `factory log event`, or explain it to the owner.
+- Every agent dispatch gets a call id, added with `factory check --add` before it is sent, passed as `--call`, with its prompt in a file passed as `--input`. [on trust]
+- `factory check` runs before each gate and before the report card. Fix each finding with a late `factory log event`, or explain it to the owner. [on trust]
 - A runner that may keep what it is sent (free tiers) only ever gets non-private material. Pass `--non-private`; the input must also be under a public folder or pass the kit's privacy scan. Non-private means: already public, synthetic fixtures, or prompts that hold none of the project's private code, logs, messages or settings. When in doubt, it is private.
-- Project commands run through `factory step <name>`.
-- Maker and checker are never the same session. One review before GATE B comes from a different vendor than the maker.
-- Raw log lines never go into a model prompt. Read the computed `factory trace-report` or `factory report-card` output instead.
-- Any script whose output feeds a published number is committed, tested, and fails loudly on empty input.
-- Never delete or overwrite an existing file. Outputs are new files.
-- Nothing is pushed, published or merged before GATE B.
+- Project commands run through `factory step <name>`. [on trust]
+- Maker and checker are never the same session. [on trust] One review before GATE B comes from a different vendor than the maker. [on trust]
+- Raw log lines never go into a model prompt. Read the computed `factory trace-report` or `factory report-card` output instead. [on trust]
+- Any script whose output feeds a published number is committed, tested, and fails loudly on empty input. [on trust]
+- Never delete or overwrite an existing file. Outputs are new files. [on trust]
+- Nothing is pushed, published or merged before GATE B. [on trust]
 - The kit never changes Claude Code configuration files.
 
 ## 7. With and without Conductor
@@ -143,7 +149,7 @@ The kit works without the Conductor app, in plain Claude Code. Claude roles run 
 
 ## 8. Roles and models
 
-Roles and models come from `factory.json` (project) over the machine file over built-in defaults. If a model fails mid-build, switch to its configured fallback and log the swap with `factory log event`. Models that may keep data are skipped for private material.
+Roles and models come from `factory.json` (project) over the machine file over built-in defaults. If a model fails mid-build, switch to its configured fallback and log the swap with `factory log event`. For the outside roles (plan reviewer, test writer, stuck diagnosis, final reviewer) the fallback is always a model from another company than the maker. When none is left, stop and ask the owner with `factory gate open`. Never switch to the maker's company on your own. [on trust] The settings check refuses a same-company fallback for these roles. [enforced by code] A model that may keep what it is sent gets only non-private material, and `factory run` refuses anything else. [enforced by code]
 
 ## 9. Quick reference
 
@@ -153,6 +159,8 @@ factory new <id>         start a build
 factory phase <name>     change phase
 factory check            find gaps in the log
 factory status           the board
+factory dashboard        the board in your browser
+factory finish           mark the build finished
 factory trace-report     bottlenecks, computed
 factory report-card      one-page summary
 factory eval run <id>    run an eval set (also: show, diagnose, improve)

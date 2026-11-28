@@ -1520,6 +1520,58 @@ def _check_layer(raw, label, is_project, base_dir, effective_notify):
                 bad('"timers.%s" must be a number of seconds (0 or more)' % key)
 
 
+OUTSIDE_ROLES = ("plan-reviewer", "test-writer", "stuck-diagnosis", "final-reviewer", "public-reviewer")
+
+_ANTHROPIC_WORDS = ("claude", "anthropic", "fable", "opus", "sonnet", "haiku")
+_OPENAI_WORDS = ("gpt", "openai", "codex")
+
+
+def model_family(runner, model):
+    """The company behind a model, lower case: anthropic, openai, a leading name such as deepseek, or unknown."""
+    runner = runner.lower() if isinstance(runner, str) else ""
+    if runner == "claude":
+        return "anthropic"
+    if runner == "codex":
+        return "openai"
+    text = model.lower() if isinstance(model, str) else ""
+    if any(word in text for word in _ANTHROPIC_WORDS):
+        return "anthropic"
+    if any(word in text for word in _OPENAI_WORDS):
+        return "openai"
+    match = re.match(r"[a-z]+", text.rsplit("/", 1)[-1])
+    return match.group(0) if match else "unknown"
+
+
+def _check_outside_roles(cfg):
+    """Outside roles must come from another company than the maker, fallbacks included (TONIGHT-SPEC 3.1)."""
+    roles = cfg.get("roles")
+    maker = roles.get("maker") if isinstance(roles, dict) else None
+    if not isinstance(maker, dict) or not isinstance(maker.get("runner"), str):
+        return
+    maker_family = model_family(maker.get("runner"), maker.get("model"))
+    for role in OUTSIDE_ROLES:
+        entry = roles.get(role)
+        if not isinstance(entry, dict):
+            continue
+        fallback = entry.get("fallback")
+        candidates = [("roles.%s" % role, entry)] if isinstance(entry.get("runner"), str) else []
+        for item in (fallback if isinstance(fallback, list) else [fallback] if fallback else []):
+            candidates.append(("roles.%s.fallback" % role, item))
+        for key, item in candidates:
+            if not isinstance(item, dict):
+                continue
+            runner, model = item.get("runner"), item.get("model")
+            named = "%s %s" % (runner, model) if isinstance(model, str) and model else "%s (no model)" % runner
+            family = model_family(runner, model)
+            if family == "unknown":
+                raise ConfigError('factory: "%s" names %s, and the kit cannot tell which company made it. '
+                                  'Name the model.' % (key, named))
+            if family == maker_family:
+                raise ConfigError('factory: "%s" names %s, from the same company as the maker (%s). '
+                                  'This role must come from another company. Use another model or remove it.'
+                                  % (key, named, maker_family))
+
+
 def validate_project_settings(raw, base_dir, label="factory.json"):
     """Validate a project settings dict on its own (used by `factory init`). Raises ConfigError."""
     if not isinstance(raw, dict):
@@ -1590,6 +1642,7 @@ def load_config_full(cwd=None):
             raise ConfigError('factory: "vendors" lists %s as both required and optional once the project '
                               'file, the machine file and the defaults are combined. Set both '
                               '"vendors.required" and "vendors.optional" in the same file.' % json.dumps(both[0]))
+    _check_outside_roles(cfg)
     sources = {}
     for leaf in _leaves(cfg):
         if not leaf:
@@ -1829,14 +1882,29 @@ def _activity(read, mtimes):
     return per_span, latest
 
 
-def _piece_names(spans):
-    """{node: latest node_label} over every span."""
-    labels = {}
+_WORK_LINE_KINDS = ("agent_call", "command", "iteration")
+
+
+def _piece_names(spans, build_dir=None):
+    """{node: name}. A piece listed in the plan keeps its plan name. Otherwise the newest
+    node_label on a work line (agent_call, command, iteration), else on any other line."""
+    work, other = {}, {}
     for span in spans:
         node = span.get("node")
         label = span.get("node_label")
         if isinstance(node, str) and isinstance(label, str) and label:
-            labels[node] = label
+            (work if span.get("kind") in _WORK_LINE_KINDS else other)[node] = label
+    labels = dict(other)
+    labels.update(work)
+    if build_dir is not None:
+        plan, _unreadable = read_plan(build_dir)
+        if plan is not None:
+            seen = set()
+            for piece in plan["pieces"]:
+                if isinstance(piece, dict) and isinstance(piece.get("id"), str) and piece["id"] not in seen:
+                    seen.add(piece["id"])
+                    if isinstance(piece.get("name"), str) and piece["name"]:
+                        labels[piece["id"]] = piece["name"]
     return labels
 
 
@@ -1871,7 +1939,7 @@ def unfinished(build, now_value=None, cfg=None):
     now_epoch_value = to_epoch(_now_text(now_value))
     mtimes = _out_mtimes(build_dir) if build_dir else {}
     per_span, build_last = _activity(read, mtimes)
-    labels = _piece_names(read["spans"])
+    labels = _piece_names(read["spans"], build_dir)
     found = []
     build_stale = build_last is not None and now_epoch_value - build_last > timers["stale_s"]
     for span in read["spans"]:
@@ -2353,11 +2421,19 @@ def _plural(count, one, many):
     return "%d %s" % (count, one if count == 1 else many)
 
 
-def _piece_name_from_log(node, labels, allowed):
+SIDE_TASK_NAME = "Side task"
+
+
+def _piece_name_from_log(node, labels, allowed, side=False):
+    """The name for a piece the plan does not name. A side job with no label is a `Side task`."""
     label = labels.get(node)
     if not label:
-        return UNRECORDED_PIECE
+        return SIDE_TASK_NAME if side else UNRECORDED_PIECE
     return label if not plain_label_check(label, allowed) else NO_PLAIN_NAME
+
+
+BUILT_LABEL = "Built, waiting for a check"
+BUILT_NOW_TEXT = "Built. Waiting for a check. No checker has started yet."
 
 
 def _call_kind(role):
@@ -2415,7 +2491,7 @@ def _plan_board(build_dir, spans, states, labels, per_span, quiet, waiting_nodes
                                "purpose": piece["purpose"] if isinstance(piece.get("purpose"), str)
                                else NO_DESCRIPTION,
                                "tech_name": piece.get("tech_name") if isinstance(piece.get("tech_name"), str) else None,
-                               "depends_on": deps, "stage": piece.get("stage")})
+                               "depends_on": deps, "stage": piece.get("stage"), "planned": True})
         used = set()
         for position, stage in enumerate(plan["stages"], 1):
             if not isinstance(stage, dict):
@@ -2431,9 +2507,9 @@ def _plan_board(build_dir, spans, states, labels, per_span, quiet, waiting_nodes
         extra_ids = [n for n in log_order if n not in known]
         other = loose + extra_ids
         for node in extra_ids:
-            listed.append({"id": node, "name": _piece_name_from_log(node, labels, allowed),
+            listed.append({"id": node, "name": _piece_name_from_log(node, labels, allowed, side=True),
                            "purpose": NO_DESCRIPTION, "tech_name": labels.get(node),
-                           "depends_on": [], "stage": None})
+                           "depends_on": [], "stage": None, "planned": False})
         if other:
             stages_out.append({"n": len(stages_out) + 1, "name": "Other work", "purpose": OTHER_WORK_PURPOSE,
                                "members": other})
@@ -2441,7 +2517,7 @@ def _plan_board(build_dir, spans, states, labels, per_span, quiet, waiting_nodes
         for node in log_order:
             listed.append({"id": node, "name": _piece_name_from_log(node, labels, allowed),
                            "purpose": NO_DESCRIPTION, "tech_name": labels.get(node),
-                           "depends_on": [], "stage": 1})
+                           "depends_on": [], "stage": 1, "planned": True})
         stages_out.append({"n": 1, "name": "Pieces", "purpose": LOG_PIECES_PURPOSE,
                            "members": [p["id"] for p in listed]})
     stage_of = {}
@@ -2471,14 +2547,14 @@ def _plan_board(build_dir, spans, states, labels, per_span, quiet, waiting_nodes
         if tail["cls"] == "checker":
             return "sent_back" if tail["span"].get("verdict") == "rejected" else "done"
         has_checker = node in expected_checkers or any(c["cls"] == "checker" for c in calls)
-        return "checking" if has_checker else "done"
+        return "built" if has_checker else "done"
 
     piece_state = {p["id"]: state_of_piece(p["id"]) for p in listed}
 
     def label_of(state):
         return {"waiting": "Waiting", "building": "Building", "checking": "Being checked",
                 "sent_back": "Sent back for fixes", "stopped": "Stopped", "done": "Done",
-                "needs_you": "Waiting for you"}[state]
+                "needs_you": "Waiting for you", "built": BUILT_LABEL}[state]
 
     pieces_out = []
     for piece in listed:
@@ -2509,9 +2585,9 @@ def _plan_board(build_dir, spans, states, labels, per_span, quiet, waiting_nodes
                 review_no += 1
                 c["label"] = "Review %d" % review_no
         attempts, reviews = attempt_no, review_no
-        if state in ("building", "checking", "sent_back", "stopped") and builders and not grouped:
+        if state in ("building", "checking", "built", "sent_back", "stopped") and builders and not grouped:
             attempt_label = "Attempt %d of this piece" % max(attempts, 1)
-        elif state in ("building", "checking", "sent_back", "stopped") and checkers and not builders:
+        elif state in ("building", "checking", "built", "sent_back", "stopped") and checkers and not builders:
             attempt_label = "Review %d" % max(reviews, 1)
         else:
             attempt_label = ""
@@ -2608,6 +2684,8 @@ def _plan_board(build_dir, spans, states, labels, per_span, quiet, waiting_nodes
                     else "A reviewer is reading it now."
             else:
                 now_text = "The builder finished. A checker reviews it next."
+        elif state == "built":
+            now_text = BUILT_NOW_TEXT
         elif state == "sent_back":
             now_text = "The checker asked for fixes. The builder picks it up next."
         elif state == "stopped":
@@ -2621,16 +2699,17 @@ def _plan_board(build_dir, spans, states, labels, per_span, quiet, waiting_nodes
         else:
             now_text = ""
         last = None
-        if state in ("building", "checking", "sent_back"):
+        if state in ("building", "checking", "built", "sent_back"):
             finished = [c for c in calls if c["counted"] and c["state"] == "done"]
             if finished:
                 row = finished[-1]["row"]
                 last = {"label": row["label"], "text": quote_plain(row["plain"], allowed),
                         "plain_source": row["plain_source"]}
         roles = {}
-        if state in ("building", "checking", "sent_back"):
+        if state in ("building", "checking", "built", "sent_back"):
             notes = {"building": ("working now", "reviews next"),
                      "checking": ("finished this attempt", "reviewing now"),
+                     "built": ("finished this attempt", "has not started"),
                      "sent_back": ("fixes it next", "asked for fixes")}[state]
             if builders:
                 roles["builder"] = {"name": role_name(builders[-1]["role"]), "note": notes[0]}
@@ -2669,7 +2748,7 @@ def _plan_board(build_dir, spans, states, labels, per_span, quiet, waiting_nodes
                     break
         pieces_out.append({
             "id": node, "name": piece["name"], "purpose": piece["purpose"], "tech_name": piece["tech_name"],
-            "stage": stage_of.get(node), "depends_on": deps, "waits_for": waits_for,
+            "stage": stage_of.get(node), "planned": piece["planned"], "depends_on": deps, "waits_for": waits_for,
             "waits_for_names": [names[d] for d in waits_for], "state": state, "state_label": label_of(state),
             "attempts": attempts, "reviews": reviews, "attempt_label": attempt_label, "now": now_text,
             "last": last, "roles": roles, "chips": {"earlier": len(chip_calls) - len(shown), "items": items},
@@ -2696,14 +2775,31 @@ def _plan_board(build_dir, spans, states, labels, per_span, quiet, waiting_nodes
     return plan_out, names, warnings
 
 
+def _local_day_clock(epoch):
+    """Jan 10, 9:35 am: the day and the clock time, in the zone clock_label uses."""
+    stamp = time.localtime(epoch)
+    return "%s %d, %s" % (time.strftime("%b", stamp), stamp.tm_mday, clock_label(epoch))
+
+
+def _other_sentence(other_running):
+    if not other_running:
+        return ""
+    return " 1 other task running." if other_running == 1 else " %d other tasks running." % other_running
+
+
 def _owner_board(plan, waiting_items, meta, state, state_label, feature_closed, build_last, started,
-                 elapsed_total, now_e, allowed, stop_plain):
+                 elapsed_total, now_e, allowed, stop_plain, running_any=True, quiet_s=600):
     """The `owner` part of the board: the first screen (PAGE-SPEC 4.2)."""
     pieces = plan["pieces"]
-    counts = {"total": len(pieces), "done": 0, "building": 0, "checking": 0, "sent_back": 0,
-              "stopped": 0, "waiting": 0, "needs_you": 0}
-    for piece in pieces:
+    planned = [piece for piece in pieces if piece.get("planned", True)]
+    counts = {"total": len(planned), "done": 0, "building": 0, "checking": 0, "built": 0,
+              "sent_back": 0, "stopped": 0, "waiting": 0, "needs_you": 0}
+    for piece in planned:
         counts[piece["state"]] += 1
+    others = [piece for piece in pieces if not piece.get("planned", True)]
+    other = {"total": len(others),
+             "running": sum(1 for piece in others if piece["state"] in ("building", "checking")),
+             "done": sum(1 for piece in others if piece["state"] == "done")}
     total = counts["total"]
     needs = bool(waiting_items)
     items = []
@@ -2712,11 +2808,12 @@ def _owner_board(plan, waiting_items, meta, state, state_label, feature_closed, 
                       "question": item["question"], "recommend": item["recommend"],
                       "asked_label": clock_label(item["since_e"]) if item["since_e"] is not None else None,
                       "waiting_label": plain_duration(now_e - item["since_e"]) if item["since_e"] is not None else None,
-                      "how": "Reply in the Conductor chat."})
+                      "how": "Answer in the session where you are running the build."})
     all_done = total > 0 and counts["done"] == total
-    finished = (feature_closed or all_done) and not needs
+    finished = feature_closed and not needs
     stopped = counts["stopped"]
     noun = "piece" if total == 1 else "pieces"
+    tail = _other_sentence(other["running"])
     if finished and total and all_done:
         sentence = "Finished. The piece is done." if total == 1 else "Finished. All %d pieces are done." % total
     elif finished and total:
@@ -2729,22 +2826,33 @@ def _owner_board(plan, waiting_items, meta, state, state_label, feature_closed, 
             sentence += (" 1 piece ended early, so it needs another attempt." if stopped == 1 else
                          " %d pieces ended early, so they need another attempt." % stopped)
         sentence += " Your answer is needed: %s." % items[0]["gate_label"].lower()
+        sentence += tail
     elif total == 0:
-        sentence = "Nothing has started yet." if build_last is None else "No pieces have started yet."
+        sentence = ("Nothing has started yet." if build_last is None else "No pieces have started yet.") + tail
+    elif all_done:
+        sentence = ("The piece is done. The build has not been closed yet." if total == 1 else
+                    "All %d pieces are done. The build has not been closed yet." % total) + tail
     else:
         parts = []
         if counts["checking"]:
             parts.append("%d being checked" % counts["checking"])
         if counts["building"]:
             parts.append("%d being built" % counts["building"])
+        if counts["built"]:
+            parts.append("%d waiting for a check" % counts["built"])
         if counts["sent_back"]:
             parts.append("%d sent back for fixes" % counts["sent_back"])
         if stopped:
             parts.append("%d ended early" % stopped)
-        if not counts["building"] and not counts["checking"]:
-            parts.append("none running right now")
-        sentence = "Building: %d of %d %s done" % (counts["done"], total, noun)
-        sentence += "".join(", " + part for part in parts) + "."
+        quiet = (not running_any and build_last is not None and now_e - build_last > quiet_s)
+        if quiet:
+            head = "Nothing is running. Last activity %s. %d of %d %s done" % (
+                _local_day_clock(build_last), counts["done"], total, noun)
+        else:
+            if not counts["building"] and not counts["checking"] and not other["running"]:
+                parts.append("none running right now")
+            head = "Building: %d of %d %s done" % (counts["done"], total, noun)
+        sentence = head + "".join(", " + part for part in parts) + "." + tail
     calm = None
     if not needs:
         if state == "done":
@@ -2784,6 +2892,7 @@ def _owner_board(plan, waiting_items, meta, state, state_label, feature_closed, 
         d.pop("_at")
     started_e = to_epoch(started)
     return {"needs_you": needs, "items": items, "calm": calm, "sentence": sentence, "counts": counts,
+            "other": other,
             "started_label": clock_label(started_e) if started_e is not None else None,
             "elapsed_label": plain_duration(elapsed_total) if elapsed_total is not None else None,
             "next_deadline": nxt, "deadlines": deadlines, "deadline_text": deadline_text}
@@ -2795,6 +2904,40 @@ def title_plain_of(project, build_id, title):
         return title
     words = str(build_id).replace("-", " ").replace("_", " ").strip()
     return "%s: %s" % (str(project)[:1].upper() + str(project)[1:], words[:1].upper() + words[1:])
+
+
+def _span_when(span, *fields):
+    for field in fields:
+        value = to_epoch(span.get(field))
+        if value is not None:
+            return value
+    return None
+
+
+def _finish_marker(spans):
+    """The finish marker (TONIGHT-SPEC 2.2), or None: a `feature` span closed with status done and
+    no agent_call or command that started after its end. {"end": text, "end_e": epoch, "leftovers": list}."""
+    best = None
+    for span in spans:
+        if span.get("kind") != "feature" or span.get("status") != "done":
+            continue
+        end_e = _span_when(span, "end", "event")
+        if end_e is None:
+            continue
+        if best is None or end_e >= best[0]:
+            best = (end_e, span)
+    if best is None:
+        return None
+    end_e, span = best
+    for other in spans:
+        if other.get("kind") in ("agent_call", "command"):
+            started = _span_when(other, "start", "event")
+            if started is not None and started > end_e:
+                return None
+    leftovers = span.get("leftovers")
+    leftovers = [item for item in leftovers if isinstance(item, dict)] if isinstance(leftovers, list) else []
+    end_text = span.get("end") if to_epoch(span.get("end")) is not None else from_epoch(end_e)
+    return {"end": end_text, "end_e": end_e, "leftovers": leftovers}
 
 
 def board(build_dir, now_value=None, cfg=None):
@@ -2812,7 +2955,7 @@ def board(build_dir, now_value=None, cfg=None):
     mtimes = _out_mtimes(build_dir)
     per_span, build_last = _activity(read, mtimes)
     stale = build_last is not None and (now_e - build_last) > timers["stale_s"]
-    labels = _piece_names(spans)
+    labels = _piece_names(spans, build_dir)
     states = {}
     for span in spans:
         states[span["span_id"]] = _state_of(span, stale)
@@ -2885,8 +3028,8 @@ def board(build_dir, now_value=None, cfg=None):
             "start": span.get("start"),
             "end": span.get("end"),
         }
-        if pid is not None:
-            entry["piece_id"] = pid
+        if node is not None:
+            entry["piece_id"] = node
         agents.append((0 if state == "running" else 1, -(own_last or 0), index, entry))
     agents.sort(key=lambda item: item[:3])
     agent_entries = [item[3] for item in agents]
@@ -2966,23 +3109,23 @@ def board(build_dir, now_value=None, cfg=None):
             "time_s": total, "last_verdict": verdict,
             "waiting_on": waits_here[0]["waiting_on"] if waits_here else None,
         }
-        if pid is not None:
-            entry["piece_id"] = pid
+        entry["piece_id"] = node
         pieces.append(entry)
 
     # build header
-    feature_closed = any(s.get("kind") == "feature" and s.get("status") == "done" for s in spans)
+    marker = _finish_marker(spans)
+    feature_closed = marker is not None
     running_any = any(s.get("kind") in ("agent_call", "command") and states[s["span_id"]] == "running"
                       for s in spans)
     if waiting_entries:
         state = "waiting"
         state_label = BUILD_STATE_LABELS["waiting"]
-    elif running_any:
-        state = "running"
-        state_label = BUILD_STATE_LABELS["running"]
     elif feature_closed:
         state = "done"
         state_label = BUILD_STATE_LABELS["done"]
+    elif running_any:
+        state = "running"
+        state_label = BUILD_STATE_LABELS["running"]
     else:
         state = "idle"
         state_label = ("No activity since %s" % _day_label(build_last)) if build_last is not None \
@@ -3073,7 +3216,8 @@ def board(build_dir, now_value=None, cfg=None):
     for entry, extra in zip(waiting_entries, [x[1] for x in waiting_extra]):
         owner_items.append(dict(entry, since_e=extra["since_e"]))
     owner = _owner_board(plan_out, owner_items, meta, state, state_label, feature_closed, build_last,
-                         started, elapsed_total, now_e, allowed, stop_plain)
+                         started, elapsed_total, now_e, allowed, stop_plain,
+                         running_any=running_any, quiet_s=timers["quiet_s"])
 
     return {
         "build": {
@@ -3084,6 +3228,8 @@ def board(build_dir, now_value=None, cfg=None):
             "elapsed_s": elapsed_total,
             "elapsed_label": words_for_duration(elapsed_total) if elapsed_total is not None else "time not recorded",
             "stop_times": stops,
+            "finished_at": marker["end"] if marker else None,
+            "leftovers": marker["leftovers"] if marker else [],
         },
         "waiting_on_you": waiting_entries,
         "agents": agent_entries,
